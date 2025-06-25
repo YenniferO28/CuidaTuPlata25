@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Página principal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/variables.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/principal.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/menu.css') }}" />
+</head>
+
+<body>
+
+    <!-- Menú botón superior derecho -->
+    <div class="menu-container">
+        <button class="menu-button" onclick="toggleMenu()">☰ Menú</button>
+        <div class="menu-opciones" id="menuOpciones">
+            <a href="{{ url_for('gastos') }}">
+                <button type="button">💸 Gastos</button>
+            </a>
+            <a href="{{ url_for('presupuesto') }}">
+                <button type="button">📊 Presupuesto</button>
+            </a>
+            <a href="{{ url_for('principal') }}">
+                <button type="button">🏠 Principal</button>
+            </a>
+            <a href="{{ url_for('logout') }}">
+                <button type="button">🔒 Cerrar sesión</button>
+            </a>
+        </div>
+    </div>
+
+    <!-- Contenido central -->
+    <div class="contenedor-central">
+        <div class="formulario-login">
+            <h2 class="titulo-login">Bienvenida, {{ Usuario }}</h2>
+            <a href="{{ url_for('presupuesto') }}">
+                <button class="boton" type="button">Registrar presupuesto mensual</button>
+            </a>
+            <a href="{{ url_for('gastos') }}">
+                <button class="boton" type="button">Registrar gasto diario</button>
+            </a>
+        </div>
+    </div>
+
+    <!-- Script para mostrar/ocultar menú -->
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('menuOpciones');
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        }
+    </script>
+
+</body>
+
+</html>

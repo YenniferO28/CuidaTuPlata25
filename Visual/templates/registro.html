@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Registro de usuario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/variables.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
+</head>
+
+<body>
+    <div class="contenedor-flex">
+        <div class="columna-index"></div>
+
+        <div class="columna-derecha">
+            <div class="formulario-login">
+                <h2 class="titulo-login">Regístrate</h2>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+                <form method="POST" action="{{ url_for('register') }}">
+                    <label for="nombre" class="etiqueta">Nombre completo:</label>
+                    <input type="text" id="nombre" name="Nombre" placeholder="Tu nombre" class="campo-input" required />
+
+                    <label for="nuevoUsuario" class="etiqueta">Usuario:</label>
+                    <input type="text" id="nuevoUsuario" name="Usuario" placeholder="Crea un usuario" class="campo-input"
+                        required />
+
+                    <label for="nuevaContrasena" class="etiqueta">Contraseña:</label>
+                    <input type="password" id="nuevaContrasena" name="Contrasena" placeholder="Crea una contraseña"
+                        class="campo-input" required />
+
+                    <label for="clave" class="etiqueta">Palabra clave (recuperación):</label>
+                    <input type="text" id="clave" name="Palabra_clave" placeholder="Ej: apellido materno"
+                        class="campo-input" required />
+
+                    <button class="boton" type="submit">Registrarme</button>
+                </form>
+                <p class="enlace-registro">
+                    ¿Ya tienes una cuenta?
+                    <a href="{{ url_for('login') }}">Inicia sesión aquí</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

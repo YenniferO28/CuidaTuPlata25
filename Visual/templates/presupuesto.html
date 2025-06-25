@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Registro de presupuesto</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/variables.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/principal.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/botonvol.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/menu.css') }}" />
+
+</head>
+
+<body>
+
+    <!-- Ejemplo de menú adaptado a la forma más recomendada -->
+    <!-- filepath: templates/principal.html -->
+    <div class="menu-hamburguesa">
+        <input type="checkbox" id="menu-toggle" />
+        <label for="menu-toggle" class="menu-icon">&#9776;</label>
+        <div class="menu">
+            <a href="{{ url_for('principal') }}"><button type="button">🏠 Inicio</button></a>
+            <a href="{{ url_for('gastos') }}"><button type="button">💸 Gastos</button></a>
+            <a href="{{ url_for('presupuesto') }}"><button type="button">📊 Presupuesto</button></a>
+            <a href="{{ url_for('ingresos') }}"><button type="button">💰 Ingresos</button></a>
+            <a href="{{ url_for('ver_deudas') }}"><button type="button">🧾 Ver Deudas</button></a>
+            <a href="{{ url_for('logout') }}"><button type="button">🔒 Cerrar sesión</button></a>
+        </div>
+    </div>
+
+    <div class="layout-dos-columnas">
+        <div class="columna-izquierda">
+            <div class="formulario-login">
+                <h2 class="titulo-login">Nuevo presupuesto mensual</h2>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+                <form id="formPresupuesto" method="POST" action="{{ url_for('presupuesto') }}">
+                    <!-- Información del período -->
+                    <fieldset class="grupo-campos">
+                        <legend class="subtitulo">🗓️ Información del período</legend>
+                        <label class="etiqueta" for="presupuesto_periodo">Periodo:</label>
+                        <input type="month" id="presupuesto_periodo" name="Periodo" class="campo-input" required>
+                    </fieldset>
+
+                    <!-- Línea de presupuesto -->
+                    <fieldset class="grupo-campos">
+                        <legend class="subtitulo">🧾 Línea de presupuesto</legend>
+
+                        <label class="etiqueta" for="presupuesto_descripcion">Descripción:</label>
+                        <input type="text" id="presupuesto_descripcion" name="Descripcion" class="campo-input" required>
+
+                        <label class="etiqueta" for="presupuesto_fecha_pago">Fecha de pago:</label>
+                        <input type="date" id="presupuesto_fecha_pago" name="Fecha_pago" class="campo-input" required>
+
+                        <label class="etiqueta" for="presupuesto_categoria">Categoría:</label>
+                        <select id="presupuesto_categoria" name="Id_categoria" class="campo-input" required>
+                            <option value="">-- Selecciona una categoría --</option>
+                        </select>
+
+                        <label class="etiqueta" for="presupuesto_subcategoria">Subcategoría:</label>
+                        <select id="presupuesto_subcategoria" name="Id_subcategoria" class="campo-input" required>
+                            <option value="">-- Selecciona una subcategoría --</option>
+                        </select>
+
+                        <label class="etiqueta" for="presupuesto_tipo_gasto">Tipo de gasto:</label>
+                        <select id="presupuesto_tipo_gasto" name="Tipo_gasto" class="campo-input" required>
+                            <option value="Fijo">Fijo</option>
+                            <option value="Variable">Variable</option>
+                        </select>
+
+                        <label class="etiqueta" for="presupuesto_valor">Valor estimado:</label>
+                        <input type="number" id="presupuesto_valor" name="Valor" class="campo-input" required>
+                    </fieldset>
+
+                    <div class="grupo-botones">
+                        <button type="submit" class="boton">💾 Guardar presupuesto</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Columna derecha: Tabla de resumen -->
+        <div class="columna-derecha">
+
+            <div class="resumen-tabla">
+                <h2 class="titulo-presu">📋 Mi presupuesto</h2>
+                <table id="tablaPresupuesto" class="tabla-presupuesto">
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Fecha de pago</th>
+                            <th>Categoría</th>
+                            <th>Subcategoría</th>
+                            <th>Tipo</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <button class="boton-volver-fijo" onclick="window.location.href='principal.html'">
+        <span class="icono-flecha">⬅</span> Volver a la principal
+    </button>
+    <script>
+        function agregarLinea() {
+            const descripcion = document.getElementById('presupuesto_descripcion').value;
+            const fechaPago = document.getElementById('presupuesto_fecha_pago').value;
+            const categoria = document.getElementById('presupuesto_categoria').value;
+            const subcategoria = document.getElementById('presupuesto_subcategoria').value;
+            const tipo = document.getElementById('presupuesto_tipo_gasto').value;
+            const valor = document.getElementById('presupuesto_valor').value;
+
+            if (!descripcion || !fechaPago || !categoria || !subcategoria || !valor) {
+                alert('Por favor completa todos los campos.');
+                return;
+            }
+
+            const tabla = document.getElementById('tablaPresupuesto').querySelector('tbody');
+            const fila = tabla.insertRow();
+
+            fila.innerHTML = `
+      <td>${descripcion}</td>
+      <td>${fechaPago}</td>
+      <td>${categoria}</td>
+      <td>${subcategoria}</td>
+      <td>${tipo}</td>
+      <td>$${parseFloat(valor).toFixed(2)}</td>
+    `;
+
+            // Limpia los campos del formulario
+            document.getElementById('presupuesto_descripcion').value = '';
+            document.getElementById('presupuesto_fecha_pago').value = '';
+            document.getElementById('presupuesto_categoria').value = '';
+            document.getElementById('presupuesto_subcategoria').value = '';
+            document.getElementById('presupuesto_tipo_gasto').value = 'Fijo';
+            document.getElementById('presupuesto_valor').value = '';
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('menuOpciones');
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        }
+    </script>
+</body>
+
+</html>

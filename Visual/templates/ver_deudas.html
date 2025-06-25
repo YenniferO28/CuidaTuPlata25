@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Mis Deudas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/variables.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/botonvol.css') }}">
+</head>
+
+<body>
+  <div class="contenedor-central">
+    <div class="formulario-login">
+      <h2 class="titulo-login">MIS DEUDAS</h2>
+      <div class="tabla-responsive">
+        <table class="tabla-deudas">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Entidad</th>
+              <th>Valor</th>
+              <th>Valor cuota</th>
+              <th>Cuotas</th>
+              <th>Interés</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for deuda in deudas %}
+            <tr>
+              <td>{{ deuda[0] }}</td>
+              <td>{{ deuda[1] }}</td>
+              <td>{{ deuda[2] }}</td>
+              <td>{{ deuda[3] }}</td>
+              <td>{{ deuda[4] }}</td>
+              <td>{{ deuda[5] }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6">No tienes deudas registradas.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="grupo-botones" style="margin-top: 20px;">
+        <a href="{{ url_for('deudas', nuevo=1) }}">
+          <button class="boton" type="button">Agregar deuda nueva</button>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráfico de deudas -->
+  <div class="resumen-tabla">
+    <canvas id="pieDeudas"></canvas>
+  </div>
+  <button class="boton-volver-fijo" onclick="window.location.href={{ url_for('ingresos')|tojson }}">
+    <span class="icono-flecha">⬅</span> Volver a la principal
+  </button>
+  <button onclick="window.location.href={{ url_for('ingresos')|tojson }}">Volver</button>
+
+  <!-- Chart.js y script para el gráfico -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // labels y data deben ser listas de Python pasadas desde main.py
+    const labels = {{ labels|tojson }};
+    const data = {{ data|tojson }};
+
+    if (labels.length && data.length && data.reduce((a, b) => a + b, 0) > 0) {
+      const ctx = document.getElementById('pieDeudas').getContext('2d');
+      const myChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: [
+              '#36a2eb', '#ff6384', '#ffcd56', '#4bc0c0', '#9966ff', '#ff9f40'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+.boton-volver-fijo {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 16px;
+  background-color: var(--color-primario);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 2000;
+  transition: background-color 0.3s ease;
+}
+
+.boton-volver-fijo:hover {
+  background-color: #004a99;
+}
+
+/* ver_deudas.css */
+.resumen-chart {
+  background-color: white;
+  padding: 16px;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  width: 320px;          /* ancho fijo del contenedor */
+  margin: 20px auto 0;   /* centrado y separación superior */
+}
+
+.resumen-chart canvas {
+  display: block;
+  width: 100%;     /* se adapta al contenedor (320px) */
+  height: auto;    /* mantiene la proporción */
+}

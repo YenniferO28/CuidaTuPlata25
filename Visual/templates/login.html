@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Inicia sesión</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/variables.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
+</head>
+<body>
+    <div class="contenedor-flex">
+        <div class="columna-index"></div>
+        <div class="columna-derecha">
+            <div class="formulario-login">
+                <h2 class="titulo-login">Inicia sesión</h2>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+                <form method="POST" action="{{ url_for('login') }}">
+                    <label for="usuario" class="etiqueta">Usuario:</label>
+                    <input type="text" id="usuario" name="Usuario" placeholder="Tu usuario" class="campo-input" required />
+                    <label for="contrasena" class="etiqueta">Contraseña:</label>
+                    <input type="password" id="contrasena" name="Contrasena" placeholder="Tu contraseña" class="campo-input" required />
+                    <button class="boton" type="submit">Entrar</button>
+                </form>
+                <p class="enlace-registro">
+                    ¿No tienes cuenta?
+                    <a href="{{ url_for('register') }}">Regístrate aquí</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

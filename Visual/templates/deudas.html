@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Registro de deudas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/variables.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/botonvol.css') }}" />
+</head>
+
+<body>
+    <div class="contenedor-central">
+        <div class="formulario-login">
+            <h2 class="titulo-login">REGISTRO DE DEUDAS</h2>
+            <form method="POST" action="{{ url_for('deudas') }}">
+                <label class="etiqueta" for="descripcion">Descripción:</label>
+                <input type="text" id="descripcion" name="descripcion" class="campo-input" required />
+
+                <label class="etiqueta" for="entidad">Entidad:</label>
+                <input type="text" id="entidad" name="entidad" class="campo-input" required />
+
+                <label class="etiqueta" for="valor">Valor actual:</label>
+                <input type="number" id="valor" name="valor" class="campo-input" required min="1" step="0.01" />
+
+                <label class="etiqueta" for="valor_cuota">Valor de la cuota:</label>
+                <input type="number" id="valor_cuota" name="valor_cuota" class="campo-input" required min="1" step="0.01" />
+
+                <label class="etiqueta" for="cuotas">Cuotas pendientes:</label>
+                <input type="number" id="cuotas" name="cuotas" class="campo-input" required min="1" />
+
+                <label class="etiqueta" for="interes">Interés (%):</label>
+                <input type="number" id="interes" name="interes" class="campo-input" required min="0" step="0.01" />
+
+                <div class="grupo-botones">
+                    <button class="boton" type="submit">Guardar</button>
+                    <a href="{{ url_for('deudas', nuevo=1) }}">
+                        <button class="boton" type="button">Agregar nueva</button>
+                    </a>
+                    <a href="{{ url_for('ver_deudas') }}">
+                        <button class="boton-secundario" type="button">Ver mis deudas</button>
+                    </a>
+                </div>
+            </form>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <ul class="flashes">
+                  {% for message in messages %}
+                    <li>{{ message }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <button class="boton-volver-fijo" onclick="window.location.href={{ url_for('ingresos')|tojson }}">
+        <span class="icono-flecha">⬅</span> Volver a la principal
+    </button>
+</body>
+
+</html>

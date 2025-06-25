@@ -1,0 +1,92 @@
+
+/* Estructura general */
+.layout-dos-columnas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.columna-izquierda {
+  flex: 1 1 45%;
+  min-width: 300px;
+  /* puedes agregar algo específico aquí si deseas */
+}
+
+.columna-derecha {
+  flex: 1 1 45%;
+  min-width: 300px;
+  /* por ejemplo, darle más espacio si la tabla es ancha */
+}
+
+/* Formularios */
+.formulario-login {
+  background-color: var(--color-fondo);
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.05);
+}
+
+.titulo-login {
+  font-size: 24px;
+  color: var(--color-primario);
+  margin-bottom: 20px;
+}
+
+.subtitulo {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-primario);
+  margin-bottom: 12px;
+}
+
+.grupo-campos {
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 20px;
+  background-color: #ffffff;
+}
+
+.grupo-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 30px;
+  text-align: center;
+}
+
+/* Tabla de presupuesto */
+.resumen-tabla {
+  max-width: 100%;
+  overflow-x: auto;
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.03);
+}
+
+.tabla-presupuesto {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.tabla-presupuesto th,
+.tabla-presupuesto td {
+  padding: 10px;
+  border: 1px solid var(--color-borde);
+  text-align: left;
+  font-size: 14px;
+}
+
+.titulo-presu {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--color-primario, #2c3e50); /* con fallback */
+  margin-bottom: 16px;
+  text-align: left; /* o center si prefieres */
+}
+

@@ -1,0 +1,108 @@
+:root {
+  --color-fondo: #F5F8FA;
+  --color-texto: #2C3E50;
+  --color-primario: #2980B9;
+  --color-hover: #1F618D;
+  --color-borde: #BDC3C7;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+}
+
+/* Menú desplegable */
+.menu-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.menu-button {
+  background-color: var(--color-primario);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.menu-button:hover {
+  background-color: var(--color-hover);
+}
+
+.menu-opciones {
+  display: none;
+  flex-direction: column;
+  margin-top: 8px;
+  background-color: white;
+  border: 1px solid var(--color-borde);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  right: 0;
+  z-index: 1000;
+  font-size: 1.1rem; /* Aquí está el cambio */
+}
+.menu-opciones button {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* espacio entre ícono y texto */
+  padding: 10px 20px;
+  border: none;
+  background-color: transparent;
+  text-align: left;
+  color: var(--color-texto);
+  font-size: 16px;
+  cursor: pointer;
+}
+.menu-opciones button i {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.menu-opciones button:hover {
+  background-color: var(--color-hover);
+  color: white;
+}
+
+/* Contenido central */
+.contenedor-central {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.formulario-login {
+  background-color: white;
+  padding: 30px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.titulo-login {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: var(--color-primario);
+}
+
+.boton {
+  background-color: var(--color-primario);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  margin-top: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.boton:hover {
+  background-color: var(--color-hover);
+}
+

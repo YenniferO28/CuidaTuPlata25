@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro de ingresos</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/variables.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/botonvol.css') }}" />
+</head>
+
+<body>
+    <div class="contenedor-central">
+        <div class="formulario-login">
+            <h2 class="titulo-login">REGISTRO DE INGRESOS</h2>
+            <form method="POST" action="{{ url_for('ingresos') }}">
+                <label class="etiqueta" for="Tipo_persona">Tipo de persona:</label>
+                <select id="Tipo_persona" name="Tipo_persona" class="campo-input" required onchange="mostrarSueldos()">
+                    <option value="">Seleccione una opción</option>
+                    <option value="P">Personal</option>
+                    <option value="F">Familiar</option>
+                </select>
+
+                <div id="sueldo1-div">
+                    <label class="etiqueta" for="Sueldo_1">Sueldo 1:</label>
+                    <input type="number" id="Sueldo_1" name="Sueldo_1" class="campo-input" required min="0" step="0.01" />
+                </div>
+
+                <div id="sueldo2-div" style="display:none;">
+                    <label class="etiqueta" for="Sueldo_2">Sueldo 2:</label>
+                    <input type="number" id="Sueldo_2" name="Sueldo_2" class="campo-input" min="0" step="0.01" />
+                </div>
+
+                <label class="etiqueta" for="Ingresos_adicionales">Ingresos adicionales:</label>
+                <input type="number" id="Ingresos_adicionales" name="Ingresos_adicionales" class="campo-input" min="0" step="0.01" />
+
+                <label class="etiqueta" for="Periodo">Periodo (YYYY-MM):</label>
+                <input type="month" id="Periodo" name="Periodo" class="campo-input" required />
+
+                <label class="etiqueta" for="Frecuencia_pago">Frecuencia de pago:</label>
+                <select id="Frecuencia_pago" name="Frecuencia_pago" class="campo-input" required>
+                    <option value="Mensual">Mensual</option>
+                    <option value="Quincenal">Quincenal</option>
+                    <option value="Semanal">Semanal</option>
+                </select>
+
+                <label class="etiqueta" for="Ahorro">¿Deseas ahorrar?</label>
+                <select id="Ahorro" name="Ahorro" class="campo-input" required onchange="mostrarAhorro()">
+                    <option value="No">No</option>
+                    <option value="Si">Sí</option>
+                </select>
+                <div id="ahorro-div" style="display:none;">
+                    <label class="etiqueta" for="Cuanto_ahorrar">¿Cuánto quieres ahorrar?</label>
+                    <input type="number" id="Cuanto_ahorrar" name="Cuanto_ahorrar" class="campo-input" min="0" step="0.01" />
+                </div>
+
+                <label class="etiqueta" for="Inversion">¿Deseas invertir?</label>
+                <select id="Inversion" name="Inversion" class="campo-input" required onchange="mostrarInversion()">
+                    <option value="No">No</option>
+                    <option value="Si">Sí</option>
+                </select>
+                <div id="inversion-div" style="display:none;">
+                    <label class="etiqueta" for="Cuanto_invertir">¿Cuánto quieres invertir?</label>
+                    <input type="number" id="Cuanto_invertir" name="Cuanto_invertir" class="campo-input" min="0" step="0.01" />
+                </div>
+
+                <label class="etiqueta" for="Deudas">¿Tienes deudas?</label>
+                <select id="Deudas" name="Deudas" class="campo-input" required>
+                    <option value="">Selecciona una opción</option>
+                    <option value="S">Sí</option>
+                    <option value="N">No</option>
+                </select>
+
+                <div class="grupo-botones">
+                    <button class="boton" type="submit">Guardar ingresos</button>
+                </div>
+            </form>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <ul class="flashes">
+                  {% for message in messages %}
+                    <li>{{ message }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    <button class="boton-volver-fijo" onclick="window.location.href={{ url_for('principal')|tojson }}">
+        <span class="icono-flecha">⬅</span> Volver a la principal
+    </button>
+    <script>
+    function mostrarSueldos() {
+        var tipo = document.getElementById('Tipo_persona').value;
+        var sueldo2Div = document.getElementById('sueldo2-div');
+        if (tipo === "F") { // Cambiado de "Familiar" a "F"
+            sueldo2Div.style.display = "block";
+            document.getElementById('Sueldo_2').required = true;
+        } else {
+            sueldo2Div.style.display = "none";
+            document.getElementById('Sueldo_2').required = false;
+            document.getElementById('Sueldo_2').value = "";
+        }
+    }
+    function mostrarAhorro() {
+        var ahorro = document.getElementById('Ahorro').value;
+        var ahorroDiv = document.getElementById('ahorro-div');
+        if (ahorro === "Si") {
+            ahorroDiv.style.display = "block";
+            document.getElementById('Cuanto_ahorrar').required = true;
+        } else {
+            ahorroDiv.style.display = "none";
+            document.getElementById('Cuanto_ahorrar').required = false;
+            document.getElementById('Cuanto_ahorrar').value = "";
+        }
+    }
+    function mostrarInversion() {
+        var inversion = document.getElementById('Inversion').value;
+        var inversionDiv = document.getElementById('inversion-div');
+        if (inversion === "Si") {
+            inversionDiv.style.display = "block";
+            document.getElementById('Cuanto_invertir').required = true;
+        } else {
+            inversionDiv.style.display = "none";
+            document.getElementById('Cuanto_invertir').required = false;
+            document.getElementById('Cuanto_invertir').value = "";
+        }
+    }
+    // Ejecutar al cargar por si hay valor preseleccionado
+    window.onload = function() {
+        mostrarSueldos();
+        mostrarAhorro();
+        mostrarInversion();
+    };
+    </script>
+</body>
+
+</html>

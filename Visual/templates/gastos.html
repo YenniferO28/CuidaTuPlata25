@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro de Gastos</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/variables.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/gastos.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/botonvol.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/menu.css') }}" />
+</head>
+
+<body>
+  <h1 style="text-align:center;">💸 Registro de Gastos</h1>
+
+  <!-- Menú hamburguesa -->
+  <div class="menu-hamburguesa">
+    <input type="checkbox" id="menu-toggle" />
+    <label for="menu-toggle" class="menu-icon">&#9776;</label>
+    <div class="menu">
+      <a href="{{ url_for('principal') }}"><button type="button">🏠 Inicio</button></a>
+      <a href="{{ url_for('gastos') }}"><button type="button">💸 Gastos</button></a>
+      <a href="{{ url_for('presupuesto') }}"><button type="button">📊 Presupuesto</button></a>
+      <a href="{{ url_for('ingresos') }}"><button type="button">💰 Ingresos</button></a>
+      <a href="{{ url_for('ver_deudas') }}"><button type="button">🧾 Ver Deudas</button></a>
+      <a href="{{ url_for('logout') }}"><button type="button">🔒 Cerrar sesión</button></a>
+    </div>
+  </div>
+
+  <div class="layout-dos-columnas">
+    <!-- Formulario de gastos -->
+    <div class="columna-izquierda">
+      <div class="formulario-login">
+        <h2 class="titulo-login">🧾 Nuevo Gasto</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <form id="formGasto" method="POST" action="{{ url_for('gastos') }}">
+          <fieldset class="grupo-campos">
+            <legend class="subtitulo">Información del gasto</legend>
+
+            <label class="etiqueta" for="fecha">Fecha:</label>
+            <input type="date" id="fecha" name="Fecha" class="campo-input" required>
+
+            <label class="etiqueta" for="descripcion">Descripción:</label>
+            <input type="text" id="descripcion" name="Descripcion" class="campo-input" required>
+
+            <label class="etiqueta" for="valor">Valor:</label>
+            <input type="number" id="valor" name="Valor" class="campo-input" required>
+
+            <label class="etiqueta" for="categoria">Categoría:</label>
+            <select id="categoria" name="Id_categoria" class="campo-input" required>
+              <option value="">-- Selecciona una categoría --</option>
+              <!-- Opciones dinámicas o estáticas -->
+            </select>
+
+            <label class="etiqueta" for="subcategoria">Subcategoría:</label>
+            <select id="subcategoria" name="Id_subcategoria" class="campo-input" required>
+              <option value="">-- Selecciona una subcategoría --</option>
+              <!-- Opciones dinámicas o estáticas -->
+            </select>
+          </fieldset>
+
+          <div class="grupo-botones">
+            <button type="submit" class="boton">💾 Guardar gasto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tabla de gastos -->
+    <div class="columna-derecha">
+
+      <div class="resumen-tabla">
+        <h2 class="titulo-login">📋 Lista de Gastos</h2>
+        <table id="tablaGastos" class="tabla-gastos">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Descripción</th>
+              <th>Categoría</th>
+              <th>Subcategoría</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <button class="boton-volver-fijo" onclick="window.location.href='principal.html'">
+    <span class="icono-flecha">⬅</span> Volver a la principal
+  </button>
+  <script>
+    document.getElementById('formGasto').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const fecha = document.getElementById('fecha').value;
+      const descripcion = document.getElementById('descripcion').value;
+      const valor = document.getElementById('valor').value;
+      const categoria = document.getElementById('categoria').value;
+      const subcategoria = document.getElementById('subcategoria').value;
+
+      if (!fecha || !descripcion || !valor || !categoria || !subcategoria) {
+        alert('Por favor completa todos los campos.');
+        return;
+      }
+
+      const tabla = document.getElementById('tablaGastos').querySelector('tbody');
+      const fila = tabla.insertRow();
+      fila.innerHTML = `
+        <td>${fecha}</td>
+        <td>${descripcion}</td>
+        <td>${categoria}</td>
+        <td>${subcategoria}</td>
+        <td>$${parseFloat(valor).toFixed(2)}</td>
+      `;
+
+      // Limpia el formulario
+      this.reset();
+    });
+
+    function toggleMenu() {
+      const menu = document.getElementById('menuOpciones');
+      menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    }
+  </script>
+</body>
+
+</html>

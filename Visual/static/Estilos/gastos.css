@@ -1,0 +1,122 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: var(--color-fondo);
+  margin: 0;
+  padding: 20px;
+  color: var(--color-texto);
+}
+
+/* Layout */
+.layout-dos-columnas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+}
+
+.columna-izquierda,
+.columna-derecha {
+  flex: 1 1 45%;
+  min-width: 300px;
+}
+
+/* Formulario */
+.formulario-login {
+  background-color: white;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.titulo-login {
+  font-size: 24px;
+  color: var(--color-primario);
+  margin-bottom: 20px;
+}
+
+.subtitulo {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-primario);
+  margin-bottom: 12px;
+}
+
+.grupo-campos {
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 20px;
+  background-color: white;
+}
+
+.etiqueta {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.campo-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--color-borde);
+  border-radius: 4px;
+  color: var(--color-texto);
+}
+
+/* Botones */
+.grupo-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 30px;
+  text-align: center;
+}
+
+.boton {
+  padding: 10px 20px;
+  background-color: var(--color-primario);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.boton:hover {
+  background-color: var(--color-hover);
+}
+
+/* Tabla de gastos */
+.resumen-tabla {
+  background-color: white;
+  padding: 16px;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+
+.tabla-gastos {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.tabla-gastos th,
+.tabla-gastos td {
+  padding: 10px;
+  border: 1px solid var(--color-borde);
+  text-align: left;
+  font-size: 14px;
+  color: var(--color-texto);
+}
+
+.titulo-presu {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--color-primario);
+  margin-bottom: 16px;
+  text-align: left;
+}

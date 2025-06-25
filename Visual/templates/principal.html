@@ -16,14 +16,20 @@
     <div class="menu-container">
         <button class="menu-button" onclick="toggleMenu()">☰ Menú</button>
         <div class="menu-opciones" id="menuOpciones">
+            <a href="{{ url_for('principal') }}">
+                <button type="button">🏠 Principal</button>
+            </a>
             <a href="{{ url_for('gastos') }}">
                 <button type="button">💸 Gastos</button>
             </a>
             <a href="{{ url_for('presupuesto') }}">
                 <button type="button">📊 Presupuesto</button>
             </a>
-            <a href="{{ url_for('principal') }}">
-                <button type="button">🏠 Principal</button>
+            <a href="{{ url_for('ingresos') }}">
+                <button type="button">💰 Ingresos</button>
+            </a>
+            <a href="{{ url_for('ver_deudas') }}">
+                <button type="button">🧾 Ver Deudas</button>
             </a>
             <a href="{{ url_for('logout') }}">
                 <button type="button">🔒 Cerrar sesión</button>
@@ -40,6 +46,9 @@
             </a>
             <a href="{{ url_for('gastos') }}">
                 <button class="boton" type="button">Registrar gasto diario</button>
+            </a>
+            <a href="{{ url_for('ver_deudas') }}">
+                <button class="boton" type="button">Ver mis deudas</button>
             </a>
         </div>
     </div>

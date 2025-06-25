@@ -1,9 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
 import os
-import pandas as pd
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -15,12 +12,6 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-def init_db():
-    conn = get_db()
-    c = conn.cursor()
-    conn.commit()
-    conn.close()
-
 # --- Rutas principales ---
 @app.route('/')
 def index():
@@ -29,11 +20,11 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        Usuario = request.form['Usuario'] 
-        Contrasena = request.form['Contrasena'] 
+        Usuario = request.form['Usuario']
+        Contrasena = request.form['Contrasena']
         conn = get_db()
         c = conn.cursor()
-        c.execute('SELECT Id_usuario FROM Usuarios WHERE Usuario=? AND Contrasena=?', (Usuario, Contrasena))
+        c.execute('SELECT Id_usuario, Nombre FROM Usuarios WHERE Usuario=? AND Contrasena=?', (Usuario, Contrasena))
         user = c.fetchone()
         if not user:
             c.execute('SELECT Id_usuario FROM Usuarios WHERE Usuario=?', (Usuario,))
@@ -46,6 +37,7 @@ def login():
             return render_template('login.html')
         conn.close()
         session['user_id'] = user['Id_usuario']
+        session['Nombre'] = user['Nombre']
         session['Usuario'] = Usuario
         return redirect(url_for('principal'))
     return render_template('login.html')
@@ -81,11 +73,9 @@ def ingresos():
         Periodo = request.form.get('Periodo')
         Frecuencia_pago = request.form.get('Frecuencia_pago')
         Ahorro = request.form.get('Ahorro')
-        Cuanto_ahorrar = request.form.get('Cuanto_ahorrar')
         Inversion = request.form.get('Inversion')
-        Cuanto_invertir = request.form.get('Cuanto_invertir')
         Deudas = request.form.get('Deudas')
-        Id_usuario = session.get('Id_usuario')
+        Id_usuario = session.get('user_id')
 
         # Validación para evitar errores de integridad
         if Tipo_persona not in ['P', 'F']:
@@ -96,12 +86,12 @@ def ingresos():
             return render_template('ingresos.html', nombre_usuario=session.get('Nombre', 'Usuario'))
 
         # Guarda los ingresos en la base de datos
-        conn = sqlite3.connect('presupuesto.db')
+        conn = get_db()
         c = conn.cursor()
         c.execute('''INSERT INTO Ingresos 
-            (Id_usuario, Sueldo_1, Sueldo_2, Ingresos_adicionales, Periodo, Tipo_persona, Ahorro, Cuanto_ahorrar, Inversion, Cuanto_invertir, Frecuencia_pago, Deudas)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-            (Id_usuario, Sueldo_1, Sueldo_2, Ingresos_adicionales, Periodo, Tipo_persona, Ahorro, Cuanto_ahorrar, Inversion, Cuanto_invertir, Frecuencia_pago, Deudas))
+            (Id_usuario, Sueldo_1, Sueldo_2, Ingresos_adicionales, Periodo, Tipo_persona, Ahorro, Inversion, Frecuencia_pago, Deudas)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (Id_usuario, Sueldo_1, Sueldo_2, Ingresos_adicionales, Periodo, Tipo_persona, Ahorro, Inversion, Frecuencia_pago, Deudas))
         conn.commit()
         conn.close()
 
@@ -148,7 +138,8 @@ def gastos():
         c.execute('INSERT INTO Gastos (Id_usuario, Fecha, Descripcion, Valor, Id_categoria, Id_subcategoria) VALUES (?, ?, ?, ?, ?, ?)',
                   (session['user_id'], Fecha, Descripcion, Valor, Id_categoria, Id_subcategoria))
         conn.commit()
-        flash('Gasto agregado correctamente', 'success')
+        flash('Gasto registrado correctamente')
+    # Mostrar gastos del usuario
     c.execute('SELECT Fecha, Descripcion, Valor FROM Gastos WHERE Id_usuario=? ORDER BY Fecha', (session['user_id'],))
     gastos = c.fetchall()
     conn.close()
@@ -168,112 +159,76 @@ def presupuesto():
         Id_subcategoria = request.form.get('Id_subcategoria')
         Tipo_gasto = request.form.get('Tipo_gasto')
         Valor = request.form.get('Valor')
-        c.execute('INSERT INTO Presupuesto (Id_usuario, Periodo, Descripcion, Fecha_pago, Id_categoria, Id_subcategoria, Tipo_gasto, Valor) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                  (session['user_id'], Periodo, Descripcion, Fecha_pago, Id_categoria, Id_subcategoria, Tipo_gasto, Valor))
+        # Calcular el secuencial (puedes mejorarlo según tu lógica)
+        c.execute('SELECT MAX(Secuencial) FROM Presupuesto WHERE Id_usuario=?', (session['user_id'],))
+        max_secuencial = c.fetchone()[0]
+        Secuencial = (max_secuencial + 1) if max_secuencial else 1
+        c.execute('''INSERT INTO Presupuesto 
+            (Id_usuario, Secuencial, Periodo, Descripcion, Fecha_pago, Id_categoria, Id_subcategoria, Tipo_gasto, Valor)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (session['user_id'], Secuencial, Periodo, Descripcion, Fecha_pago, Id_categoria, Id_subcategoria, Tipo_gasto, Valor))
         conn.commit()
-        flash('Presupuesto agregado correctamente', 'success')
-    c.execute('SELECT Periodo, Descripcion, Valor FROM Presupuesto WHERE Id_usuario=? ORDER BY Periodo', (session['user_id'],))
+        flash('Presupuesto registrado correctamente')
+    # Mostrar presupuestos del usuario
+    c.execute('SELECT * FROM Presupuesto WHERE Id_usuario=? ORDER BY Fecha_pago', (session['user_id'],))
     presupuestos = c.fetchall()
     conn.close()
     return render_template('presupuesto.html', presupuestos=presupuestos)
+
+@app.route('/deudas', methods=['GET', 'POST'])
+def deudas():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    conn = get_db()
+    c = conn.cursor()
+    if request.method == 'POST':
+        Descripcion = request.form.get('descripcion')  # <-- minúscula
+        Entidad = request.form.get('Entidad')
+        Valor_actual = request.form.get('Valor_actual')
+        Cuotas_pendientes = request.form.get('Cuotas_pendientes')
+        Valor_cuota = request.form.get('Valor_cuota')
+        Interes = request.form.get('Interes')
+        c.execute('''INSERT INTO Deudas 
+            (Id_usuario, Descripcion, Entidad, Valor_actual, Cuotas_pendientes, Valor_cuota, Interes)
+            VALUES (?, ?, ?, ?, ?, ?, ?)''',
+            (session['user_id'], Descripcion, Entidad, Valor_actual, Cuotas_pendientes, Valor_cuota, Interes))
+        conn.commit()
+        flash('Deuda registrada correctamente')
+    # Mostrar deudas del usuario
+    c.execute('SELECT * FROM Deudas WHERE Id_usuario=?', (session['user_id'],))
+    deudas = c.fetchall()
+    conn.close()
+    return render_template('deudas.html', deudas=deudas)
+
+@app.route('/ver_deudas')
+def ver_deudas():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('SELECT Descripcion, Entidad, Valor_actual, Valor_cuota, Cuotas_pendientes, Interes FROM Deudas WHERE Id_usuario=?', (session['user_id'],))
+    deudas = c.fetchall()
+    labels = [d['Descripcion'] for d in deudas]
+    data = [d['Valor_actual'] for d in deudas]
+    conn.close()
+    return render_template('ver_deudas.html', deudas=deudas, labels=labels, data=data)
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# --- Funciones para gráficos ---
-def get_gastos(user_id):
+@app.route('/get_subcategorias/<int:categoria_id>')
+def get_subcategorias(categoria_id):
     conn = get_db()
-    df = pd.read_sql_query("SELECT fecha, monto, descripcion FROM gastos WHERE user_id=? ORDER BY fecha", conn, params=(user_id,))
-    conn.close()
-    return df
-
-def mostrar_graficas(df, ax):
-    ax[0].clear()
-    ax[1].clear()
-    if not df.empty:
-        df['fecha'] = pd.to_datetime(df['fecha'])
-        # Gasto diario
-        diario = df.groupby('fecha')['monto'].sum()
-        diario.plot(kind='bar', ax=ax[0], title="Gasto Diario")
-        # Gasto mensual
-        df['mes'] = df['fecha'].dt.to_period('M')
-        mensual = df.groupby('mes')['monto'].sum()
-        mensual.plot(kind='bar', ax=ax[1], title="Gasto Mensual")
-
-@app.route('/graficos')
-def graficos():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    df = get_gastos(session['user_id'])
-    fig, ax = plt.subplots(1, 2, figsize=(8, 3))
-    mostrar_graficas(df, ax)
-    plt.tight_layout()
-    # Guardar la figura
-    fig.savefig('static/graficos/grafico.png')
-    return render_template('graficos.html', url='static/graficos/grafico.png')
-
-@app.route('/deudas', methods=['GET', 'POST'])
-def deudas():
-    if request.method == 'POST':
-        Id_usuario = session.get('Id_usuario')
-        descripcion = request.form.get('descripcion')
-        entidad = request.form.get('entidad')
-        valor_actual = request.form.get('valor_actual')
-        valor_cuota = request.form.get('valor_cuota')
-        cuotas = request.form.get('cuotas')
-        interes = request.form.get('interes')
-
-        # Validación antes de insertar
-        try:
-            if (not descripcion or not entidad or
-                float(valor_actual) <= 0 or float(valor_cuota) <= 0 or
-                int(cuotas) <= 0 or float(interes) < 0):
-                flash('Todos los campos son obligatorios y deben tener valores válidos.')
-                return render_template('deudas.html')
-
-            conn = sqlite3.connect('presupuesto.db')
-            c = conn.cursor()
-            c.execute('''
-                INSERT INTO Deudas 
-                (Id_usuario, Descripcion, Entidad, Valor_actual, Valor_cuota, Cuotas, Interes)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (Id_usuario, descripcion, entidad, valor_actual, valor_cuota, cuotas, interes))
-            conn.commit()
-            conn.close()
-            flash('Deuda registrada correctamente')
-            return redirect(url_for('ver_deudas'))
-        except Exception as e:
-            flash(f'Error al registrar la deuda: {e}')
-            return render_template('deudas.html')
-
-    return render_template('deudas.html')
-
-@app.route('/ver_deudas')
-def ver_deudas():
-    Id_usuario = session.get('Id_usuario')
-    if not Id_usuario:
-        flash('Debes iniciar sesión para ver tus deudas.')
-        return redirect(url_for('login'))
-
-    conn = sqlite3.connect('presupuesto.db')
     c = conn.cursor()
-    c.execute('''
-        SELECT Descripcion, Entidad, Valor, Valor_cuota, Cuotas, Interes
-        FROM Deudas
-        WHERE Id_usuario = ?
-    ''', (Id_usuario,))
-    deudas = c.fetchall()
+    c.execute('SELECT Id_subcategoria, Subcategoria FROM Subcategoria WHERE Id_categoria=?', (categoria_id,))
+    subcategorias = [{'id': row['Id_subcategoria'], 'nombre': row['Subcategoria']} for row in c.fetchall()]
     conn.close()
+    return jsonify(subcategorias)
 
-    labels = [d[0] for d in deudas]
-    data = [d[2] for d in deudas]
+# Puedes agregar aquí más rutas según lo necesites
 
-    return render_template('ver_deudas.html', deudas=deudas, labels=labels, data=data)
-
-# --- Main ---
 if __name__ == '__main__':
-    init_db()
-    app.run(debug=True, port=5001)
+    app.run(debug=True)
 

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -19,19 +18,19 @@
                 <input type="text" id="descripcion" name="descripcion" class="campo-input" required />
 
                 <label class="etiqueta" for="entidad">Entidad:</label>
-                <input type="text" id="entidad" name="entidad" class="campo-input" required />
+                <input type="text" id="entidad" name="Entidad" class="campo-input" required />
 
                 <label class="etiqueta" for="valor">Valor actual:</label>
-                <input type="number" id="valor" name="valor" class="campo-input" required min="1" step="0.01" />
+                <input type="number" id="valor" name="Valor_actual" class="campo-input" required min="1" step="0.01" />
 
                 <label class="etiqueta" for="valor_cuota">Valor de la cuota:</label>
-                <input type="number" id="valor_cuota" name="valor_cuota" class="campo-input" required min="1" step="0.01" />
+                <input type="number" id="valor_cuota" name="Valor_cuota" class="campo-input" required min="1" step="0.01" />
 
                 <label class="etiqueta" for="cuotas">Cuotas pendientes:</label>
-                <input type="number" id="cuotas" name="cuotas" class="campo-input" required min="1" />
+                <input type="number" id="cuotas" name="Cuotas_pendientes" class="campo-input" required min="1" />
 
                 <label class="etiqueta" for="interes">Interés (%):</label>
-                <input type="number" id="interes" name="interes" class="campo-input" required min="0" step="0.01" />
+                <input type="number" id="interes" name="Interes" class="campo-input" required min="0" step="0.01" />
 
                 <div class="grupo-botones">
                     <button class="boton" type="submit">Guardar</button>
@@ -39,7 +38,7 @@
                         <button class="boton" type="button">Agregar nueva</button>
                     </a>
                     <a href="{{ url_for('ver_deudas') }}">
-                        <button class="boton-secundario" type="button">Ver mis deudas</button>
+                        <button class="boton" type="button">Ver mis deudas</button>
                     </a>
                 </div>
             </form>

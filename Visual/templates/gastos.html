@@ -97,9 +97,9 @@
       </div>
     </div>
   </div>
-  <button class="boton-volver-fijo" onclick="window.location.href='{{ url_for('principal') }}'">
-    <span class="icono-flecha">⬅</span> Volver a la principal
-  </button>
+  <a href="{{ url_for('principal') }}">
+    <button type="button" class="boton-volver-fijo">🏠 Principal</button>
+  </a>
   <script>
     function toggleMenu() {
       const menu = document.getElementById('menuOpciones');

@@ -6,6 +6,11 @@
     <title>Bienvenido</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/variables.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
+    <style>
+        .justificado {
+            text-align: justify;
+        }
+    </style>
 </head>
 
 <body>
@@ -13,11 +18,14 @@
         <div class="columna-index"></div>
         <div class="columna-derecha">
             <div class="formulario-login">
-                <h2 class="titulo-login">Bienvenido</h2>
-                <p>¡Bienvenido a la aplicación de gestión financiera!<br>
-                Por favor, inicia sesión para continuar o regístrate si aún no tienes una cuenta.</p>
-                <a class="boton" href="{{ url_for('login') }}">Iniciar sesión</a>
-                <a class="boton" href="{{ url_for('register') }}">Registrarse</a>
+                <h2 class="titulo-login">💰Bienvenido</h2>
+                <p class="justificado">¡A tu nuevo comienzo financiero¡<br>
+                ¡Organiza, controla y mejora tus finanzas personales y familiares en un 
+                solo lugar! Lleva un registro claro de tus gastos diarios, pagos mensuales 
+                y deudas… y prepárate para tomar mejores decisiones cada día.
+                </p>
+                <a class="boton" href="{{ url_for('login') }}">👉Iniciar sesión</a>
+                <a class="boton" href="{{ url_for('registro') }}">🙋‍♀️ ¿Nuevo por aquí? Regístrate</a>
             </div>
         </div>
     </div>

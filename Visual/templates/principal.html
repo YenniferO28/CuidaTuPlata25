@@ -8,6 +8,100 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/principal.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/menu.css') }}" />
+    <style>
+        /* Puedes ajustar los valores según tu preferencia */
+        .contenedor-central {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 32px;
+            margin-top: 32px;
+            justify-content: center;
+        }
+
+        .formulario-login {
+            width: 270px;
+            min-height: 350px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+
+        .grafico-box.grafico-ancho {
+            min-width: 600px;
+            width: 700px;
+            min-height: 400px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .titulo-login {
+            color: #217dbb;
+            margin-bottom: 18px;
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .caja-botones {
+            min-width: 200px;
+            max-width: 220px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 24px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+
+        .caja-cifras {
+            min-width: 320px;
+            max-width: 350px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            margin-right: 12px;
+        }
+
+        .boton-agregar {
+            display: block;
+            width: 100%;
+            background: #217dbb;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 0;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .boton-agregar:hover {
+            background: #155a8a;
+        }
+    </style>
 </head>
 
 <body>
@@ -17,39 +111,59 @@
         <button class="menu-button" onclick="toggleMenu()">☰ Menú</button>
         <div class="menu-opciones" id="menuOpciones">
             <a href="{{ url_for('principal') }}">
-                <button type="button">🏠 Principal</button>
-            </a>
-            <a href="{{ url_for('tabla_gastos') }}">
-                <button type="button">💸 Gastos</button>
-            </a>
-            <a href="{{ url_for('presupuesto') }}">
-                <button type="button">📊 Presupuesto</button>
+                <button type="button">🏠Principal</button>
             </a>
             <a href="{{ url_for('ingresos') }}">
-                <button type="button">💰 Ingresos</button>
+                <button type="button">💰Ingresos</button>
+            </a>
+            <a href="{{ url_for('presupuesto') }}">
+                <button type="button">📊Presupuesto</button>
+            </a>
+            <a href="{{ url_for('tabla_gastos') }}">
+                <button type="button">💸Gastos</button>
             </a>
             <a href="{{ url_for('ver_deudas') }}">
-                <button type="button">🧾 Ver Deudas</button>
+                <button type="button">🧾Deudas</button>
             </a>
             <a href="{{ url_for('logout') }}">
-                <button type="button">🔒 Cerrar sesión</button>
+                <button type="button">🔒Cerrar sesión</button>
             </a>
         </div>
     </div>
 
     <!-- Contenido central -->
+    <!-- Encabezado centrado -->
+    <h1 class="titulo-login">
+        ¡BIENVENIDO, {{ nombre_usuario|upper }}!
+    </h1>
+
+    <!-- Contenedor principal en flex -->
     <div class="contenedor-central">
-        <div class="formulario-login">
-            <h2 class="titulo-login">Bienvenida, {{ Usuario }}</h2>
-            <a href="{{ url_for('presupuesto') }}">
-                <button class="boton" type="button">Registrar presupuesto mensual</button>
-            </a>
-            <a href="{{ url_for('tabla_gastos') }}">
-                <button class="boton" type="button">Registrar gasto diario</button>
-            </a>
-            <a href="{{ url_for('ver_deudas') }}">
-                <button class="boton" type="button">Ver mis deudas</button>
-            </a>
+        <!-- Caja de botones a la izquierda -->
+        <div class="caja-botones">
+            <a href="{{ url_for('ingresos') }}" class="boton-agregar">Actualizar ingresos</a>
+            <a href="{{ url_for('presupuesto') }}" class="boton-agregar">Agregar presupuesto</a>
+            <a href="{{ url_for('gastos') }}" class="boton-agregar">Agregar gasto</a>
+            <a href="{{ url_for('deudas') }}" class="boton-agregar">Agregar deuda</a>
+            <a href="{{ url_for('tabla_presupuesto') }}" class="boton-agregar">Ver tabla presupuesto</a>
+            <a href="{{ url_for('tabla_gastos') }}" class="boton-agregar">Ver tabla gastos</a>
+            <a href="{{ url_for('ver_deudas') }}" class="boton-agregar">Ver deudas</a>
+        </div>
+        <!-- Caja de resumen de cifras -->
+        <div class="caja-cifras">
+            <p style="margin-bottom: 24px;">Aquí puedes ver un resumen de tus finanzas del mes actual.</p>
+            <ul style="padding-left: 18px;">
+                <li><b>Ingresos totales:</b> ${{ ingresos_totales }}</li>
+                <li><b>Total presupuesto del mes:</b> ${{ suma_presupuesto }}</li>
+                <li><b>Total gastos del mes:</b> ${{ suma_gastos }}</li>
+                <li><b>Total deudas activas:</b> ${{ suma_deudas }}</li>
+            </ul>
+        </div>
+        <!-- Gráfico de barras a la derecha -->
+        <div class="grafico-box grafico-ancho">
+            <h3 style="color:#217dbb; margin-bottom: 18px;">Comparativo: Ingresos, Presupuesto, Gastos y Deudas
+            </h3>
+            <canvas id="graficoComparativo"></canvas>
         </div>
     </div>
 
@@ -59,6 +173,48 @@
             const menu = document.getElementById('menuOpciones');
             menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
         }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ingresos = {{ ingresos_totales|default(0) }};
+        const presupuesto = {{ suma_presupuesto|default(0) }};
+        const gastos = {{ suma_gastos|default(0) }};
+        const deudas = {{ suma_deudas|default(0) }};
+
+        const labels = ['Ingresos', 'Presupuesto', 'Gastos', 'Deudas'];
+        const data = [ingresos, presupuesto, gastos, deudas];
+        const backgroundColors = [
+            '#4caf50', // Ingresos
+            '#217dbb', // Presupuesto
+            '#f4845f', // Gastos
+            '#b83b5e'  // Deudas
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('graficoComparativo').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Monto',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
     </script>
 
 </body>

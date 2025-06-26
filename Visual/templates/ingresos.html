@@ -86,9 +86,9 @@
             {% endwith %}
         </div>
     </div>
-    <button class="boton-volver-fijo" onclick="window.location.href={{ url_for('principal')|tojson }}">
-        <span class="icono-flecha">⬅</span> Volver a la principal
-    </button>
+    <a href="{{ url_for('principal') }}">
+        <button type="button" class="boton-volver-fijo">🏠 Principal</button>
+    </a>
     <script>
     function mostrarSueldos() {
         var tipo = document.getElementById('Tipo_persona').value;

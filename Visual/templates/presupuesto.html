@@ -9,25 +9,60 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/principal.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/botonvol.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/menu.css') }}" />
+    <style>
+        .layout-dos-columnas {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 60vh;
+        }
 
+        .columna-izquierda {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .formulario-login {
+            width: 100%;
+        }
+
+        .grupo-botones {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .boton {
+            width: 100%;
+            text-align: center;
+        }
+    </style>
 </head>
 
 <body>
-
-    <!-- Ejemplo de menú adaptado a la forma más recomendada -->
-    <!-- filepath: templates/principal.html -->
-    <div class="menu-hamburguesa">
-        <input type="checkbox" id="menu-toggle" />
-        <label for="menu-toggle" class="menu-icon">&#9776;</label>
-        <div class="menu">
-            <a href="{{ url_for('principal') }}"><button type="button">🏠 Inicio</button></a>
-            <a href="{{ url_for('tabla_gastos') }}">
-              <button type="button">💸 Gastos</button>
+    <!-- Menú botón superior derecho -->
+    <div class="menu-container">
+        <button class="menu-button" onclick="toggleMenu()">☰ Menú</button>
+        <div class="menu-opciones" id="menuOpciones">
+            <a href="{{ url_for('principal') }}">
+                <button type="button">🏠Principal</button>
             </a>
-            <a href="{{ url_for('presupuesto') }}"><button type="button">📊 Presupuesto</button></a>
-            <a href="{{ url_for('ingresos') }}"><button type="button">💰 Ingresos</button></a>
-            <a href="{{ url_for('ver_deudas') }}"><button type="button">🧾 Ver Deudas</button></a>
-            <a href="{{ url_for('logout') }}"><button type="button">🔒 Cerrar sesión</button></a>
+            <a href="{{ url_for('ingresos') }}">
+                <button type="button">💰Ingresos</button>
+            </a>
+            <a href="{{ url_for('presupuesto') }}">
+                <button type="button">📊Presupuesto</button>
+            </a>
+            <a href="{{ url_for('tabla_gastos') }}">
+                <button type="button">💸Gastos</button>
+            </a>
+            <a href="{{ url_for('ver_deudas') }}">
+                <button type="button">🧾Deudas</button>
+            </a>
+            <a href="{{ url_for('logout') }}">
+                <button type="button">🔒Cerrar sesión</button>
+            </a>
         </div>
     </div>
 
@@ -63,11 +98,17 @@
                         <label class="etiqueta" for="presupuesto_categoria">Categoría:</label>
                         <select id="presupuesto_categoria" name="Id_categoria" class="campo-input" required>
                             <option value="">-- Selecciona una categoría --</option>
+                            {% for cat in categorias %}
+                                <option value="{{ cat['Id_categoria'] }}">{{ cat['Categoria_principal'] }}</option>
+                            {% endfor %}
                         </select>
 
                         <label class="etiqueta" for="presupuesto_subcategoria">Subcategoría:</label>
                         <select id="presupuesto_subcategoria" name="Id_subcategoria" class="campo-input" required>
                             <option value="">-- Selecciona una subcategoría --</option>
+                            {% for sub in subcategorias %}
+                                <option value="{{ sub['Id_subcategoria'] }}" data-categoria="{{ sub['Id_categoria'] }}">{{ sub['Nombre'] }}</option>
+                            {% endfor %}
                         </select>
 
                         <label class="etiqueta" for="presupuesto_tipo_gasto">Tipo de gasto:</label>
@@ -82,74 +123,42 @@
 
                     <div class="grupo-botones">
                         <button type="submit" class="boton">💾 Guardar presupuesto</button>
+                        <a href="{{ url_for('tabla_presupuesto') }}">
+                            <button type="button" class="boton">📊 Ver resumen de presupuesto</button>
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
-        <!-- Columna derecha: Tabla de resumen -->
-        <div class="columna-derecha">
-
-            <div class="resumen-tabla">
-                <h2 class="titulo-presu">📋 Mi presupuesto</h2>
-                <table id="tablaPresupuesto" class="tabla-presupuesto">
-                    <thead>
-                        <tr>
-                            <th>Descripción</th>
-                            <th>Fecha de pago</th>
-                            <th>Categoría</th>
-                            <th>Subcategoría</th>
-                            <th>Tipo</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
     </div>
-    <button class="boton-volver-fijo" onclick="window.location.href='principal.html'">
-        <span class="icono-flecha">⬅</span> Volver a la principal
-    </button>
+    <a href="{{ url_for('principal') }}">
+        <button type="button" class="boton-volver-fijo">🏠 Principal</button>
+    </a>
     <script>
-        function agregarLinea() {
-            const descripcion = document.getElementById('presupuesto_descripcion').value;
-            const fechaPago = document.getElementById('presupuesto_fecha_pago').value;
-            const categoria = document.getElementById('presupuesto_categoria').value;
-            const subcategoria = document.getElementById('presupuesto_subcategoria').value;
-            const tipo = document.getElementById('presupuesto_tipo_gasto').value;
-            const valor = document.getElementById('presupuesto_valor').value;
-
-            if (!descripcion || !fechaPago || !categoria || !subcategoria || !valor) {
-                alert('Por favor completa todos los campos.');
-                return;
-            }
-
-            const tabla = document.getElementById('tablaPresupuesto').querySelector('tbody');
-            const fila = tabla.insertRow();
-
-            fila.innerHTML = `
-      <td>${descripcion}</td>
-      <td>${fechaPago}</td>
-      <td>${categoria}</td>
-      <td>${subcategoria}</td>
-      <td>${tipo}</td>
-      <td>$${parseFloat(valor).toFixed(2)}</td>
-    `;
-
-            // Limpia los campos del formulario
-            document.getElementById('presupuesto_descripcion').value = '';
-            document.getElementById('presupuesto_fecha_pago').value = '';
-            document.getElementById('presupuesto_categoria').value = '';
-            document.getElementById('presupuesto_subcategoria').value = '';
-            document.getElementById('presupuesto_tipo_gasto').value = 'Fijo';
-            document.getElementById('presupuesto_valor').value = '';
-        }
-
         function toggleMenu() {
             const menu = document.getElementById('menuOpciones');
             menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
         }
     </script>
+    <script>
+document.getElementById('presupuesto_categoria').addEventListener('change', function() {
+    var categoriaId = this.value;
+    var subcatSelect = document.getElementById('presupuesto_subcategoria');
+    var options = subcatSelect.querySelectorAll('option[data-categoria]');
+    subcatSelect.value = "";
+    options.forEach(function(opt) {
+        opt.style.display = (opt.getAttribute('data-categoria') === categoriaId) ? 'block' : 'none';
+    });
+});
+// Oculta todas las subcategorías al cargar
+window.addEventListener('DOMContentLoaded', function() {
+    var subcatSelect = document.getElementById('presupuesto_subcategoria');
+    var options = subcatSelect.querySelectorAll('option[data-categoria]');
+    options.forEach(function(opt) {
+        opt.style.display = 'none';
+    });
+});
+</script>
 </body>
 
 </html>

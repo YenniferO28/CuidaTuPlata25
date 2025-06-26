@@ -73,10 +73,10 @@
         </div>
     </div>
 
-    <button class="boton-volver-fijo" onclick="window.location.href={{ url_for('ingresos')|tojson }}">
-        <span class="icono-flecha">⬅</span> Volver a la principal
-    </button>
-
+    <a href="{{ url_for('principal') }}">
+        <button type="button" class="boton-volver-fijo">🏠 Principal</button>
+    </a>
+      
     <script>
     document.getElementById('Id_categoria').addEventListener('change', function() {
         var categoriaId = this.value;

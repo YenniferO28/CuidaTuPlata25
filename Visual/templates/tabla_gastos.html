@@ -66,6 +66,23 @@
     .boton-agregar:hover {
       background: #155a8a;
     }
+
+    .icono-flecha {
+      margin-right: 8px;
+    }
+
+    .campo-input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+      width: 120px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
   </style>
 </head>
 
@@ -74,20 +91,24 @@
   <div class="menu-container">
     <button class="menu-button" onclick="toggleMenu()">☰ Menú</button>
     <div class="menu-opciones" id="menuOpciones">
-      <a href="{{ url_for('tabla_gastos') }}">
-        <button type="button">💸 Gastos</button>
-      </a>
-      <a href="{{ url_for('presupuesto') }}">
-        <button type="button">📊 Presupuesto</button>
-      </a>
-      <a href="{{ url_for('principal') }}">
-        <button type="button">🏠 Principal</button>
-      </a>
-      <a href="{{ url_for('ingresos') }}"><button type="button">💰 Ingresos</button></a>
-      <a href="{{ url_for('ver_deudas') }}"><button type="button">🧾 Ver Deudas</button></a>
-      <a href="{{ url_for('logout') }}">
-        <button type="button">🔒 Cerrar sesión</button>
-      </a>
+        <a href="{{ url_for('principal') }}">
+            <button type="button">🏠Principal</button>
+        </a>
+        <a href="{{ url_for('ingresos') }}">
+            <button type="button">💰Ingresos</button>
+        </a>
+        <a href="{{ url_for('presupuesto') }}">
+            <button type="button">📊Presupuesto</button>
+        </a>
+        <a href="{{ url_for('tabla_gastos') }}">
+            <button type="button">💸Gastos</button>
+        </a>
+        <a href="{{ url_for('ver_deudas') }}">
+            <button type="button">🧾Deudas</button>
+        </a>
+        <a href="{{ url_for('logout') }}">
+            <button type="button">🔒Cerrar sesión</button>
+        </a>
     </div>
   </div>
 
@@ -99,9 +120,9 @@
           <tr>
             <th>Fecha</th>
             <th>Descripción</th>
+            <th>Valor</th>
             <th>Categoría</th>
             <th>Subcategoría</th>
-            <th>Valor</th>
           </tr>
         </thead>
         <tbody>
@@ -127,9 +148,11 @@
     </div>
   </div>
 
-  <button class="boton-volver-fijo" onclick="window.location.href='{{ url_for('principal') }}'">
-    <span class="icono-flecha">⬅</span> Volver a la principal
-  </button>
+  <div style="width:100%; display:flex; justify-content:center; margin-top:30px;">
+    <a href="{{ url_for('principal') }}">
+        <button type="button" class="boton-volver-fijo">🏠 Principal</button>
+    </a>
+  </div>
 
   <script>
     function toggleMenu() {
@@ -137,41 +160,47 @@
       menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
     }
 
-    // Datos para el gráfico (usa descripción y valor)
-    const labels = [
-      {% for gasto in gastos %}
-        "{{ gasto['Descripcion'] }}"{% if not loop.last %},{% endif %}
-      {% endfor %}
-    ];
-    const data = [
-      {% for gasto in gastos %}
-        {{ gasto['Valor'] }}{% if not loop.last %},{% endif %}
-      {% endfor %}
-    ];
-    const colores = [
-      '#217dbb', '#2ca8e0', '#6ec1e4', '#b2dffb', '#f7b267', '#f4845f', '#f27059', '#b83b5e'
+    const labels = {{ labels|tojson }};
+    const data = {{ data|tojson }};
+    const subcategorias = {{ subcategorias|tojson }};
+    const paleta = [
+        '#217dbb', '#2ca8e0', '#6ec1e4', '#b2dffb', '#f7b267', '#f4845f', '#f27059', '#b83b5e', '#6a0572', '#ab83a1'
     ];
 
-    const ctx = document.getElementById('graficoGastos').getContext('2d');
-    new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: data,
-          backgroundColor: colores,
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          }
+    const subcategoriasUnicas = [...new Set(subcategorias)];
+    const colorPorSubcategoria = {};
+    subcategoriasUnicas.forEach((subcat, idx) => {
+        colorPorSubcategoria[subcat] = paleta[idx % paleta.length];
+    });
+    const backgroundColors = subcategorias.map(subcat => colorPorSubcategoria[subcat]);
+    const tieneDatos = labels.length > 0 && data.some(v => v > 0);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (tieneDatos) {
+            const ctx = document.getElementById('graficoGastos').getContext('2d');
+            window.graficoGastosInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('graficoGastos').parentNode.innerHTML +=
+                "<p style='color:#888; text-align:center;'>No hay datos para mostrar el gráfico.</p>";
         }
-      }
     });
   </script>
 </body>
-
 </html>

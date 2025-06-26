@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -42,25 +43,35 @@ def login():
         return redirect(url_for('principal'))
     return render_template('login.html')
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
     if request.method == 'POST':
-        Usuario = request.form.get('Usuario')
-        Contrasena = request.form.get('Contrasena')
-        Nombre = request.form.get('Nombre')
-        Palabra_clave = request.form.get('Palabra_clave')
+        nombre = request.form.get('nombre')
+        usuario = request.form.get('usuario')
+        contrasena = request.form.get('contrasena')
+        palabra_clave = request.form.get('palabra_clave')
+        if not all([nombre, usuario, contrasena, palabra_clave]):
+            flash('Todos los campos son obligatorios')
+            return render_template('registro.html')
+        estado = 'Activo'
+        tipo_usuario = 'Cliente'
+        permisos = 'N'
+        fecha_registro = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
         conn = get_db()
         c = conn.cursor()
         try:
-            c.execute('INSERT INTO Usuarios (Nombre, Usuario, Contrasena, Palabra_clave, Estado, Tipo_usuario, Permisos) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                      (Nombre, Usuario, Contrasena, Palabra_clave, 'Activo', 'Cliente', 'N'))
+            c.execute('''
+                INSERT INTO Usuarios (Nombre, Usuario, Contrasena, Palabra_clave, Estado, Tipo_usuario, Permisos, Fecha_registro)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (nombre, usuario, contrasena, palabra_clave, estado, tipo_usuario, permisos, fecha_registro))
             conn.commit()
-            flash('Usuario registrado correctamente', 'success')
-            return redirect(url_for('login'))
         except sqlite3.IntegrityError:
-            flash('El usuario ya existe', 'danger')
-        finally:
-            conn.close()
+            flash('El usuario ya existe. Elige otro nombre de usuario.')
+            return render_template('registro.html')
+        conn.close()
+        flash('Usuario registrado correctamente')
+        return redirect(url_for('login'))
     return render_template('registro.html')
 
 @app.route('/ingresos', methods=['GET', 'POST'])
@@ -110,6 +121,7 @@ def ingresos():
 def principal():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    nombre_usuario = session.get('Nombre', 'Usuario')  # <-- Cambia aquí
     # Mostrar formulario de ingresos solo la primera vez
     if not session.get('ingresos_registrados'):
         conn = get_db()
@@ -121,7 +133,56 @@ def principal():
             return redirect(url_for('ingresos'))
         else:
             session['ingresos_registrados'] = True
-    return render_template('principal.html', username=session['Usuario'])
+
+    # Calcula los totales:
+    conn = get_db()
+    c = conn.cursor()
+    # Traer ingresos
+    c.execute('SELECT Sueldo_1, Sueldo_2, Ingresos_adicionales FROM Ingresos WHERE Id_usuario=?', (session['user_id'],))
+    ingresos_row = c.fetchone()
+    if ingresos_row:
+        ingresos_totales = sum(float(ingresos_row[k] or 0) for k in ['Sueldo_1', 'Sueldo_2', 'Ingresos_adicionales'])
+    else:
+        ingresos_totales = 0
+
+    # Suma el presupuesto del mes
+    hoy = datetime.now()
+    mes_actual = hoy.strftime('%m')
+    anio_actual = hoy.strftime('%Y')
+    c.execute('''
+        SELECT SUM(Valor) as total
+        FROM Presupuesto
+        WHERE Id_usuario=? AND Fecha_pago IS NOT NULL AND
+              strftime('%Y', Fecha_pago) = ? AND strftime('%m', Fecha_pago) = ?
+    ''', (session['user_id'], anio_actual, mes_actual))
+    suma_presupuesto = c.fetchone()['total'] or 0
+
+    # Suma los gastos del mes
+    c.execute('''
+        SELECT SUM(Valor) as total
+        FROM Gastos
+        WHERE Id_usuario=? AND Fecha IS NOT NULL AND
+              strftime('%Y', Fecha) = ? AND strftime('%m', Fecha) = ?
+    ''', (session['user_id'], anio_actual, mes_actual))
+    suma_gastos = c.fetchone()['total'] or 0
+
+    # Suma las deudas activas
+    c.execute('''
+        SELECT SUM(Valor_actual) as total
+        FROM Deudas
+        WHERE Id_usuario=?
+    ''', (session['user_id'],))
+    suma_deudas = c.fetchone()['total'] or 0
+
+    conn.close()
+    return render_template(
+        'principal.html',
+        nombre_usuario=nombre_usuario,
+        ingresos_totales=ingresos_totales,
+        suma_presupuesto=suma_presupuesto,
+        suma_gastos=suma_gastos,
+        suma_deudas=suma_deudas
+    )
 
 @app.route('/gastos', methods=['GET', 'POST'])
 def gastos():
@@ -155,6 +216,12 @@ def presupuesto():
         return redirect(url_for('login'))
     conn = get_db()
     c = conn.cursor()
+    # Traer todas las categorías menos la 11
+    c.execute('SELECT Id_categoria, Categoria_principal FROM Categoria WHERE Id_categoria != 11')
+    categorias = c.fetchall()
+    # Traer subcategorías solo de esas categorías
+    c.execute('SELECT Id_subcategoria, Nombre, Id_categoria FROM Subcategoria WHERE Id_categoria != 11')
+    subcategorias = c.fetchall()
     if request.method == 'POST':
         Periodo = request.form.get('Periodo')
         Descripcion = request.form.get('Descripcion')
@@ -184,7 +251,7 @@ def presupuesto():
     ''', (session['user_id'],))
     presupuestos = c.fetchall()
     conn.close()
-    return render_template('presupuesto.html', presupuestos=presupuestos)
+    return render_template('presupuesto.html', categorias=categorias, subcategorias=subcategorias, presupuestos=presupuestos)
 
 @app.route('/deudas', methods=['GET', 'POST'])
 def deudas():
@@ -230,12 +297,19 @@ def ver_deudas():
         LEFT JOIN Subcategoria s ON d.Id_subcategoria = s.Id_subcategoria
         WHERE d.Id_usuario=?
     ''', (session['user_id'],))
-    deudas = c.fetchall()
-    # Para el gráfico (puedes ajustar según lo que quieras mostrar)
-    labels = [deuda['Descripcion'] for deuda in deudas]
-    data = [deuda['Valor_actual'] for deuda in deudas]
+    deudas = [dict(deuda) for deuda in c.fetchall()]
+    # Prepara los arrays para el gráfico
+    labels = [f"{d['Descripcion']} - {d['Subcategoria']}" for d in deudas]
+    data = [d['Valor_actual'] for d in deudas]
+    subcategorias = [d['Subcategoria'] for d in deudas]
     conn.close()
-    return render_template('ver_deudas.html', deudas=deudas, labels=labels, data=data)
+    return render_template(
+        'ver_deudas.html',
+        deudas=deudas,
+        labels=labels,
+        data=data,
+        subcategorias=subcategorias
+    )
 
 @app.route('/logout')
 def logout():
@@ -269,9 +343,81 @@ def tabla_gastos():
         LEFT JOIN Subcategoria s ON g.Id_subcategoria = s.Id_subcategoria
         WHERE g.Id_usuario=?
     ''', (session['user_id'],))
-    gastos = c.fetchall()
+    gastos_rows = c.fetchall()
+    # Convierte cada Row a dict
+    gastos = [dict(g) for g in gastos_rows]
+    labels = [f"{g['Descripcion']} - {g['Subcategoria']}" for g in gastos]
+    data = [g['Valor'] for g in gastos]
+    subcategorias = [g['Subcategoria'] for g in gastos]
+    fechas = [g['Fecha'] for g in gastos]
     conn.close()
-    return render_template('tabla_gastos.html', gastos=gastos)
+    return render_template(
+        'tabla_gastos.html',
+        gastos=gastos,
+        labels=labels,
+        data=data,
+        subcategorias=subcategorias,
+        fechas=fechas
+    )
+
+@app.route('/tabla_presupuesto')
+def tabla_presupuesto():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    conn = get_db()
+    c = conn.cursor()
+    # Traer presupuestos del usuario
+    c.execute('''
+        SELECT p.Descripcion, p.Fecha_pago, c.Categoria_principal AS Categoria, s.Nombre AS Subcategoria, 
+               p.Tipo_gasto, p.Valor
+        FROM Presupuesto p
+        LEFT JOIN Categoria c ON p.Id_categoria = c.Id_categoria
+        LEFT JOIN Subcategoria s ON p.Id_subcategoria = s.Id_subcategoria
+        WHERE p.Id_usuario=?
+    ''', (session['user_id'],))
+    presupuesto = [dict(row) for row in c.fetchall()]
+
+    # Filtrar por mes y año actual
+    hoy = datetime.now()
+    mes_actual = hoy.strftime('%m')
+    anio_actual = hoy.strftime('%Y')
+    presupuesto_mes = [
+        item for item in presupuesto
+        if item['Fecha_pago'] and
+           str(item['Fecha_pago'])[0:4] == anio_actual and
+           str(item['Fecha_pago'])[5:7] == mes_actual
+    ]
+
+    labels = [f"{item['Descripcion']} - {item['Subcategoria']}" for item in presupuesto_mes]
+    data = [item['Valor'] for item in presupuesto_mes]
+    subcategorias = [item['Subcategoria'] for item in presupuesto_mes]
+
+    # Traer ingresos
+    c.execute('SELECT Sueldo_1, Sueldo_2, Ingresos_adicionales FROM Ingresos WHERE Id_usuario=?', (session['user_id'],))
+    ingresos_row = c.fetchone()
+    if ingresos_row:
+        ingresos_totales = sum(float(ingresos_row[k] or 0) for k in ['Sueldo_1', 'Sueldo_2', 'Ingresos_adicionales'])
+    else:
+        ingresos_totales = 0
+    suma_presupuesto = sum(data)
+    saldo_disponible = ingresos_totales - suma_presupuesto
+    conn.close()
+    # Añade el saldo como una categoría más para el gráfico
+    labels_grafico = labels + ['Saldo disponible']
+    data_grafico = data + [saldo_disponible]
+    subcategorias_grafico = subcategorias + ['Saldo disponible']
+    return render_template(
+        'tabla_presupuesto.html',
+        presupuesto=presupuesto_mes,
+        labels=labels_grafico,
+        data=data_grafico,
+        subcategorias=subcategorias_grafico,
+        ingresos_totales=ingresos_totales,
+        suma_presupuesto=suma_presupuesto,
+        saldo_disponible=saldo_disponible,
+        mes_actual=mes_actual,
+        anio_actual=anio_actual
+    )
 
 # Puedes agregar aquí más rutas según lo necesites
 

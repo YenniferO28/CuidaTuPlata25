@@ -19,28 +19,35 @@
             margin-top: 30px;
             margin-left: 40px;
         }
+
         .tabla-presupuesto {
             min-width: 700px;
             border-collapse: collapse;
         }
-        .tabla-presupuesto th, .tabla-presupuesto td {
+
+        .tabla-presupuesto th,
+        .tabla-presupuesto td {
             border: 1px solid #217dbb;
             padding: 8px 12px;
             text-align: center;
         }
+
         .tabla-presupuesto th {
             background: #217dbb;
             color: #fff;
             font-weight: bold;
         }
+
         .grafico-box {
             background: #fff;
             border-radius: 16px;
             box-shadow: 0 2px 8px #0001;
             padding: 20px;
-            min-width: 400px;
-            min-height: 350px;
+            min-width: 320px;
+            min-height: 320px;
+            max-width: 360px;
         }
+
         .boton-agregar {
             display: block;
             width: 220px;
@@ -56,6 +63,7 @@
             text-decoration: none;
             transition: background 0.2s;
         }
+
         .boton-agregar:hover {
             background: #155a8a;
         }
@@ -67,14 +75,24 @@
     <div class="menu-container">
         <button class="menu-button" onclick="toggleMenu()">☰ Menú</button>
         <div class="menu-opciones" id="menuOpciones">
-            <a href="{{ url_for('tabla_gastos') }}">
-                <button type="button">💸 Gastos</button>
+            <a href="{{ url_for('principal') }}">
+                <button type="button">🏠Principal</button>
             </a>
-            <a href="{{ url_for('presupuesto') }}"><button type="button">📊 Presupuesto</button></a>
-            <a href="{{ url_for('principal') }}"><button type="button">🏠 Principal</button></a>
-            <a href="{{ url_for('ingresos') }}"><button type="button">💰 Ingresos</button></a>
-            <a href="{{ url_for('ver_deudas') }}"><button type="button">🧾 Ver Deudas</button></a>
-            <a href="{{ url_for('logout') }}"><button type="button">🔒 Cerrar sesión</button></a>
+            <a href="{{ url_for('ingresos') }}">
+                <button type="button">💰Ingresos</button>
+            </a>
+            <a href="{{ url_for('presupuesto') }}">
+                <button type="button">📊Presupuesto</button>
+            </a>
+            <a href="{{ url_for('tabla_gastos') }}">
+                <button type="button">💸Gastos</button>
+            </a>
+            <a href="{{ url_for('ver_deudas') }}">
+                <button type="button">🧾Deudas</button>
+            </a>
+            <a href="{{ url_for('logout') }}">
+                <button type="button">🔒Cerrar sesión</button>
+            </a>
         </div>
     </div>
 
@@ -105,20 +123,28 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <!-- Botón para agregar nuevo presupuesto -->
             <a href="{{ url_for('presupuesto') }}" class="boton-agregar">Agregar nuevo presupuesto</a>
         </div>
-        <div class="grafico-box">
-            <h3 style="color:#217dbb; margin-bottom: 18px;">
-                📊 Proporción de mi presupuesto
-            </h3>
-            <canvas id="graficoPresupuesto"></canvas>
+        <div>
+            <div class="grafico-box">
+                <h3 style="color:#217dbb; margin-bottom: 18px;">
+                    📊 Proporción de mi presupuesto del mes
+                </h3>
+                <canvas id="graficoPresupuesto" width="320" height="320"></canvas>
+                <!-- Información debajo del gráfico -->
+                <div style="margin-top: 24px;">
+                    <p><b>Mes actual:</b> {{ mes_actual }}/{{ anio_actual }}</p>
+                    <p><b>Ingresos totales:</b> ${{ ingresos_totales }}</p>
+                    <p><b>Total presupuesto del mes:</b> ${{ suma_presupuesto }}</p>
+                    <p><b>Saldo disponible:</b> ${{ saldo_disponible }}</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <button class="boton-volver-fijo" onclick="window.location.href='{{ url_for('principal') }}'">
-        <span class="icono-flecha">⬅</span> Volver a la principal
-    </button>
+    <a href="{{ url_for('principal') }}">
+        <button type="button" class="boton-volver-fijo">🏠 Principal</button>
+    </a>
 
     <script>
         function agregarLinea() {
@@ -158,56 +184,49 @@
             menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        // Colores por subcategoría
-        const subcategorias = [
-            {% for item in presupuesto %}
-                "{{ item['Subcategoria'] }}"{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ];
-        const subcategoriasUnicas = [...new Set(subcategorias)];
+        // Gráfico de presupuesto del mes
+        const labels = {{ labels|tojson }};
+        const data = {{ data|tojson }};
+        const subcategorias = {{ subcategorias|tojson }};
         const paleta = [
-            '#217dbb', '#2ca8e0', '#6ec1e4', '#b2dffb', '#f7b267', '#f4845f', '#f27059', '#b83b5e', '#6a0572', '#ab83a1'
+            '#217dbb', '#2ca8e0', '#6ec1e4', '#b2dffb', '#f7b267', '#f4845f', '#f27059', '#b83b5e', '#6a0572', '#ab83a1', '#4caf50'
         ];
+
+        const subcategoriasUnicas = [...new Set(subcategorias)];
         const colorPorSubcategoria = {};
         subcategoriasUnicas.forEach((subcat, idx) => {
             colorPorSubcategoria[subcat] = paleta[idx % paleta.length];
         });
+        const backgroundColors = subcategorias.map(subcat => colorPorSubcategoria[subcat]);
+        const tieneDatos = labels.length > 0 && data.some(v => v > 0);
 
-        const labels = [
-            {% for item in presupuesto %}
-                "{{ item['Descripcion'] }}"{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ];
-        const data = [
-            {% for item in presupuesto %}
-                {{ item['Valor'] }}{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ];
-        const backgroundColors = [
-            {% for item in presupuesto %}
-                colorPorSubcategoria["{{ item['Subcategoria'] }}"]{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ];
-
-        const ctx = document.getElementById('graficoPresupuesto').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: backgroundColors,
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
+        document.addEventListener('DOMContentLoaded', function() {
+            if (tieneDatos) {
+                const ctx = document.getElementById('graficoPresupuesto').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: backgroundColors,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
                     }
-                }
+                });
+            } else {
+                document.getElementById('graficoPresupuesto').parentNode.innerHTML +=
+                    "<p style='color:#888; text-align:center;'>No hay datos para mostrar el gráfico.</p>";
             }
         });
+        console.log(labels, data, subcategorias);
     </script>
 </body>
 </html>

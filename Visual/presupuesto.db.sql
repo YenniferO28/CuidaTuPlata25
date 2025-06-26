@@ -1,4 +1,12 @@
 BEGIN TRANSACTION;
+CREATE TABLE IF NOT EXISTS "AbonosDeuda" (
+	"Id_abono"	INTEGER,
+	"Id_deuda"	INTEGER,
+	"Fecha_abono"	TEXT,
+	"Monto_abonado"	REAL,
+	PRIMARY KEY("Id_abono" AUTOINCREMENT),
+	FOREIGN KEY("Id_deuda") REFERENCES "Deudas"("Id_deuda")
+);
 CREATE TABLE IF NOT EXISTS "Categoria" (
 	"Id_categoria"	INTEGER,
 	"Categoria_principal"	TEXT,
@@ -13,7 +21,11 @@ CREATE TABLE IF NOT EXISTS "Deudas" (
 	"Cuotas_pendientes"	INTEGER,
 	"Valor_cuota"	REAL,
 	"Interes"	REAL,
+	"Id_categoria"	INTEGER,
+	"Id_subcategoria"	INTEGER,
 	PRIMARY KEY("Id_deuda" AUTOINCREMENT),
+	FOREIGN KEY("Id_categoria") REFERENCES "Categoria"("Id_categoria"),
+	FOREIGN KEY("Id_subcategoria") REFERENCES "Subcategoria"("Id_subcategoria"),
 	FOREIGN KEY("Id_usuario") REFERENCES "Usuarios"("Id_usuario")
 );
 CREATE TABLE IF NOT EXISTS "Gastos" (
@@ -76,6 +88,7 @@ CREATE TABLE IF NOT EXISTS "Usuarios" (
 	"Estado"	TEXT CHECK("Estado" IN ('Activo', 'Inactivo')),
 	"Tipo_usuario"	TEXT CHECK("Tipo_usuario" IN ('Administrador', 'Cliente')),
 	"Permisos"	TEXT CHECK("Permisos" IN ('S', 'N')),
+	"Fecha_registro"	TEXT,
 	PRIMARY KEY("Id_usuario" AUTOINCREMENT)
 );
 INSERT INTO "Categoria" VALUES (1,'Vivienda');
@@ -88,6 +101,7 @@ INSERT INTO "Categoria" VALUES (7,'Educación y Desarrollo');
 INSERT INTO "Categoria" VALUES (8,'Ocio y Entretenimiento');
 INSERT INTO "Categoria" VALUES (9,'Mascotas y Naturaleza');
 INSERT INTO "Categoria" VALUES (10,'Gastos Varios');
+INSERT INTO "Categoria" VALUES (11,'Compromisos de pago');
 INSERT INTO "Subcategoria" VALUES (1,1,'Arriendo');
 INSERT INTO "Subcategoria" VALUES (2,1,'Mantenimiento y reparaciones');
 INSERT INTO "Subcategoria" VALUES (3,1,'Muebles y electrodomésticos');
@@ -129,5 +143,16 @@ INSERT INTO "Subcategoria" VALUES (38,9,'Veterinario');
 INSERT INTO "Subcategoria" VALUES (39,10,'Regalos');
 INSERT INTO "Subcategoria" VALUES (40,10,'Vacaciones');
 INSERT INTO "Subcategoria" VALUES (41,10,'Otros gastos no clasificados');
-INSERT INTO "Usuarios" VALUES (1,'Yennifer','yeye28','1234','milo','Activo','Cliente','N');
+INSERT INTO "Subcategoria" VALUES (42,11,'Crédito de consumo');
+INSERT INTO "Subcategoria" VALUES (43,11,'Crédito de libre inversión');
+INSERT INTO "Subcategoria" VALUES (44,11,'Crédito de libranza');
+INSERT INTO "Subcategoria" VALUES (45,11,'Crédito hipotecario');
+INSERT INTO "Subcategoria" VALUES (46,11,'Crédito vehicular');
+INSERT INTO "Subcategoria" VALUES (47,11,'Tarjeta de crédito');
+INSERT INTO "Subcategoria" VALUES (48,11,'Crédito educativo');
+INSERT INTO "Subcategoria" VALUES (49,11,'Microcrédito');
+INSERT INTO "Subcategoria" VALUES (50,11,'Crédito comercial o empresarial');
+INSERT INTO "Subcategoria" VALUES (51,11,'Compra de cartera');
+INSERT INTO "Subcategoria" VALUES (52,11,'Otros compromisos financieros');
+INSERT INTO "Usuarios" VALUES (2,'Yennifer O','yeye02','1234','milo','Activo','Cliente','N',NULL);
 COMMIT;

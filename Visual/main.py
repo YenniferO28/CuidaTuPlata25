@@ -129,21 +129,25 @@ def gastos():
         return redirect(url_for('login'))
     conn = get_db()
     c = conn.cursor()
+    # Traer categorías
+    c.execute('SELECT Id_categoria, Categoria_principal FROM Categoria')
+    categorias = c.fetchall()
+    # Traer subcategorías
+    c.execute('SELECT Id_subcategoria, Nombre, Id_categoria FROM Subcategoria')
+    subcategorias = c.fetchall()
     if request.method == 'POST':
         Fecha = request.form.get('Fecha')
         Descripcion = request.form.get('Descripcion')
         Valor = request.form.get('Valor')
         Id_categoria = request.form.get('Id_categoria')
-        Id_subcategoria = request.form.get('Id_subcategoria')
+        Id_subcategoria = request.form.get('Id_subcategoria')   
         c.execute('INSERT INTO Gastos (Id_usuario, Fecha, Descripcion, Valor, Id_categoria, Id_subcategoria) VALUES (?, ?, ?, ?, ?, ?)',
                   (session['user_id'], Fecha, Descripcion, Valor, Id_categoria, Id_subcategoria))
         conn.commit()
-        flash('Gasto registrado correctamente')
-    # Mostrar gastos del usuario
-    c.execute('SELECT Fecha, Descripcion, Valor FROM Gastos WHERE Id_usuario=? ORDER BY Fecha', (session['user_id'],))
-    gastos = c.fetchall()
+        flash('Gasto guardado correctamente')
+        return redirect(url_for('tabla_gastos'))
     conn.close()
-    return render_template('gastos.html', gastos=gastos)
+    return render_template('gastos.html', categorias=categorias, subcategorias=subcategorias)
 
 @app.route('/presupuesto', methods=['GET', 'POST'])
 def presupuesto():
@@ -170,7 +174,14 @@ def presupuesto():
         conn.commit()
         flash('Presupuesto registrado correctamente')
     # Mostrar presupuestos del usuario
-    c.execute('SELECT * FROM Presupuesto WHERE Id_usuario=? ORDER BY Fecha_pago', (session['user_id'],))
+    c.execute('''
+        SELECT p.Descripcion, p.Fecha_pago, c.Categoria_principal AS Categoria, s.Nombre AS Subcategoria, 
+               p.Tipo_gasto, p.Valor
+        FROM Presupuesto p
+        LEFT JOIN Categoria c ON p.Id_categoria = c.Id_categoria
+        LEFT JOIN Subcategoria s ON p.Id_subcategoria = s.Id_subcategoria
+        WHERE p.Id_usuario=?
+    ''', (session['user_id'],))
     presupuestos = c.fetchall()
     conn.close()
     return render_template('presupuesto.html', presupuestos=presupuestos)
@@ -181,24 +192,29 @@ def deudas():
         return redirect(url_for('login'))
     conn = get_db()
     c = conn.cursor()
+    # Traer categorías y subcategorías para el formulario
+    c.execute('SELECT Id_categoria, Categoria_principal FROM Categoria')
+    categorias = c.fetchall()
+    c.execute('SELECT Id_subcategoria, Nombre, Id_categoria FROM Subcategoria')
+    subcategorias = c.fetchall()
     if request.method == 'POST':
-        Descripcion = request.form.get('descripcion')  # <-- minúscula
+        Descripcion = request.form.get('descripcion')
         Entidad = request.form.get('Entidad')
         Valor_actual = request.form.get('Valor_actual')
         Cuotas_pendientes = request.form.get('Cuotas_pendientes')
         Valor_cuota = request.form.get('Valor_cuota')
         Interes = request.form.get('Interes')
+        Id_categoria = request.form.get('Id_categoria')
+        Id_subcategoria = request.form.get('Id_subcategoria')
         c.execute('''INSERT INTO Deudas 
-            (Id_usuario, Descripcion, Entidad, Valor_actual, Cuotas_pendientes, Valor_cuota, Interes)
-            VALUES (?, ?, ?, ?, ?, ?, ?)''',
-            (session['user_id'], Descripcion, Entidad, Valor_actual, Cuotas_pendientes, Valor_cuota, Interes))
+            (Id_usuario, Descripcion, Entidad, Valor_actual, Cuotas_pendientes, Valor_cuota, Interes, Id_categoria, Id_subcategoria)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (session['user_id'], Descripcion, Entidad, Valor_actual, Cuotas_pendientes, Valor_cuota, Interes, Id_categoria, Id_subcategoria))
         conn.commit()
         flash('Deuda registrada correctamente')
-    # Mostrar deudas del usuario
-    c.execute('SELECT * FROM Deudas WHERE Id_usuario=?', (session['user_id'],))
-    deudas = c.fetchall()
+        return redirect(url_for('ver_deudas'))
     conn.close()
-    return render_template('deudas.html', deudas=deudas)
+    return render_template('deudas.html', categorias=categorias, subcategorias=subcategorias)
 
 @app.route('/ver_deudas')
 def ver_deudas():
@@ -206,10 +222,18 @@ def ver_deudas():
         return redirect(url_for('login'))
     conn = get_db()
     c = conn.cursor()
-    c.execute('SELECT Descripcion, Entidad, Valor_actual, Valor_cuota, Cuotas_pendientes, Interes FROM Deudas WHERE Id_usuario=?', (session['user_id'],))
+    c.execute('''
+        SELECT d.Descripcion, d.Entidad, d.Valor_actual, d.Valor_cuota, d.Cuotas_pendientes, d.Interes,
+               c.Categoria_principal AS Categoria, s.Nombre AS Subcategoria
+        FROM Deudas d
+        LEFT JOIN Categoria c ON d.Id_categoria = c.Id_categoria
+        LEFT JOIN Subcategoria s ON d.Id_subcategoria = s.Id_subcategoria
+        WHERE d.Id_usuario=?
+    ''', (session['user_id'],))
     deudas = c.fetchall()
-    labels = [d['Descripcion'] for d in deudas]
-    data = [d['Valor_actual'] for d in deudas]
+    # Para el gráfico (puedes ajustar según lo que quieras mostrar)
+    labels = [deuda['Descripcion'] for deuda in deudas]
+    data = [deuda['Valor_actual'] for deuda in deudas]
     conn.close()
     return render_template('ver_deudas.html', deudas=deudas, labels=labels, data=data)
 
@@ -222,10 +246,32 @@ def logout():
 def get_subcategorias(categoria_id):
     conn = get_db()
     c = conn.cursor()
-    c.execute('SELECT Id_subcategoria, Subcategoria FROM Subcategoria WHERE Id_categoria=?', (categoria_id,))
-    subcategorias = [{'id': row['Id_subcategoria'], 'nombre': row['Subcategoria']} for row in c.fetchall()]
+    c.execute('SELECT Id_subcategoria, Nombre FROM Subcategoria WHERE Id_categoria=?', (categoria_id,))
+    subcategorias = [{'id': row['Id_subcategoria'], 'nombre': row['Nombre']} for row in c.fetchall()]
     conn.close()
     return jsonify(subcategorias)
+
+@app.route('/tabla_gastos')
+def tabla_gastos():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('''
+        SELECT 
+            g.Fecha, 
+            g.Descripcion, 
+            c.Categoria_principal AS Categoria, 
+            s.Nombre AS Subcategoria, 
+            g.Valor
+        FROM Gastos g
+        LEFT JOIN Categoria c ON g.Id_categoria = c.Id_categoria
+        LEFT JOIN Subcategoria s ON g.Id_subcategoria = s.Id_subcategoria
+        WHERE g.Id_usuario=?
+    ''', (session['user_id'],))
+    gastos = c.fetchall()
+    conn.close()
+    return render_template('tabla_gastos.html', gastos=gastos)
 
 # Puedes agregar aquí más rutas según lo necesites
 

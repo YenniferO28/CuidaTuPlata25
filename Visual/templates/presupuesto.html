@@ -21,7 +21,9 @@
         <label for="menu-toggle" class="menu-icon">&#9776;</label>
         <div class="menu">
             <a href="{{ url_for('principal') }}"><button type="button">🏠 Inicio</button></a>
-            <a href="{{ url_for('gastos') }}"><button type="button">💸 Gastos</button></a>
+            <a href="{{ url_for('tabla_gastos') }}">
+              <button type="button">💸 Gastos</button>
+            </a>
             <a href="{{ url_for('presupuesto') }}"><button type="button">📊 Presupuesto</button></a>
             <a href="{{ url_for('ingresos') }}"><button type="button">💰 Ingresos</button></a>
             <a href="{{ url_for('ver_deudas') }}"><button type="button">🧾 Ver Deudas</button></a>

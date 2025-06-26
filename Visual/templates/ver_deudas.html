@@ -21,7 +21,15 @@
         }
 
         .tabla-deudas {
-            min-width: 700px;
+            max-width: 700px;
+            width: 100%;
+            margin: 0 auto;
+            font-size: 15px;
+        }
+
+        .tabla-deudas th,
+        .tabla-deudas td {
+            padding: 6px 10px;
         }
 
         .grafico-box {
@@ -86,7 +94,9 @@
     <div class="menu-container">
         <button class="menu-button" onclick="toggleMenu()">☰ Menú</button>
         <div class="menu-opciones" id="menuOpciones">
-            <a href="{{ url_for('gastos') }}"><button type="button">💸 Gastos</button></a>
+            <a href="{{ url_for('tabla_gastos') }}">
+                <button type="button">💸 Gastos</button>
+            </a>
             <a href="{{ url_for('presupuesto') }}"><button type="button">📊 Presupuesto</button></a>
             <a href="{{ url_for('principal') }}"><button type="button">🏠 Principal</button></a>
             <a href="{{ url_for('ingresos') }}"><button type="button">💰 Ingresos</button></a>
@@ -103,10 +113,12 @@
                     <tr>
                         <th>Descripción</th>
                         <th>Entidad</th>
-                        <th>Valor</th>
+                        <th>Valor actual</th>
                         <th>Valor cuota</th>
-                        <th>Cuotas</th>
-                        <th>Interés</th>
+                        <th>Cuotas P</th>
+                        <th>Interés (%)</th>
+                        <th>Categoría</th>
+                        <th>Subcategoría</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -118,6 +130,8 @@
                         <td>{{ deuda['Valor_cuota'] }}</td>
                         <td>{{ deuda['Cuotas_pendientes'] }}</td>
                         <td>{{ deuda['Interes'] }}</td>
+                        <td>{{ deuda['Categoria'] }}</td>
+                        <td>{{ deuda['Subcategoria'] }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -137,32 +151,61 @@
     </div>
 
     <script>
-        // Datos pasados desde Flask
-        const labels = {{ labels|tojson }};
-        const data = {{ data|tojson }};
-        const colores = [
-            '#217dbb', '#2ca8e0', '#6ec1e4', '#b2dffb', '#f7b267', '#f4845f', '#f27059', '#b83b5e'
-        ];
+        // 1. Obtén las subcategorías únicas de las deudas
+        const subcategorias = [
+            {% for deuda in deudas %}
+              "{{ deuda['Subcategoria'] }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ];
+          // Elimina duplicados
+          const subcategoriasUnicas = [...new Set(subcategorias)];
+          // Paleta de colores (agrega más si tienes muchas subcategorías)
+          const paleta = [
+            '#217dbb', '#2ca8e0', '#6ec1e4', '#b2dffb', '#f7b267', '#f4845f', '#f27059', '#b83b5e', '#6a0572', '#ab83a1'
+          ];
+          // Asigna un color a cada subcategoría
+          const colorPorSubcategoria = {};
+          subcategoriasUnicas.forEach((subcat, idx) => {
+            colorPorSubcategoria[subcat] = paleta[idx % paleta.length];
+          });
 
-        const ctx = document.getElementById('graficoDeudas').getContext('2d');
-        new Chart(ctx, {
+          // 2. Prepara los datos para el gráfico
+          const labels = [
+            {% for deuda in deudas %}
+              "{{ deuda['Descripcion'] }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ];
+          const data = [
+            {% for deuda in deudas %}
+              {{ deuda['Valor_actual'] }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ];
+          // 3. Asigna el color según la subcategoría de cada deuda
+          const backgroundColors = [
+            {% for deuda in deudas %}
+              colorPorSubcategoria["{{ deuda['Subcategoria'] }}"]{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ];
+
+          const ctx = document.getElementById('graficoDeudas').getContext('2d');
+          new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: colores,
-                }]
+              labels: labels,
+              datasets: [{
+                data: data,
+                backgroundColor: backgroundColors,
+              }]
             },
             options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'bottom'
                 }
+              }
             }
-        });
+          });
 
         function toggleMenu() {
             const menu = document.getElementById('menuOpciones');

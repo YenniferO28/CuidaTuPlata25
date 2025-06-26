@@ -8,34 +8,41 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/estilos.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/gastos.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/botonvol.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='Estilos/menu.css') }}" />
+  <style>
+    .layout-dos-columnas {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 60vh;
+    }
+
+    .columna-izquierda {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .formulario-login {
+      width: 100%;
+    }
+
+    .grupo-botones {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .boton {
+      width: 100%;
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
   <h1 style="text-align:center;">💸 Registro de Gastos</h1>
 
-  <
   <!-- Menú botón superior derecho -->
-    <div class="menu-container">
-        <button class="menu-button" onclick="toggleMenu()">☰ Menú</button>
-        <div class="menu-opciones" id="menuOpciones">
-            <a href="{{ url_for('gastos') }}">
-                <button type="button">💸 Gastos</button>
-            </a>
-            <a href="{{ url_for('presupuesto') }}">
-                <button type="button">📊 Presupuesto</button>
-            </a>
-            <a href="{{ url_for('principal') }}">
-                <button type="button">🏠 Principal</button>
-            </a>
-            <a href="{{ url_for('ingresos') }}"><button type="button">💰 Ingresos</button></a>
-            <a href="{{ url_for('ver_deudas') }}"><button type="button">🧾 Ver Deudas</button></a>
-            <a href="{{ url_for('logout') }}">
-                <button type="button">🔒 Cerrar sesión</button>
-            </a>
-        </div>
-    </div>
-
   <div class="layout-dos-columnas">
     <!-- Formulario de gastos -->
     <div class="columna-izquierda">
@@ -61,82 +68,60 @@
             <label class="etiqueta" for="valor">Valor:</label>
             <input type="number" id="valor" name="Valor" class="campo-input" required>
 
+            <!-- Categoría -->
             <label class="etiqueta" for="categoria">Categoría:</label>
             <select id="categoria" name="Id_categoria" class="campo-input" required>
               <option value="">-- Selecciona una categoría --</option>
-              <!-- Opciones dinámicas o estáticas -->
+              {% for cat in categorias %}
+                <option value="{{ cat['Id_categoria'] }}">{{ cat['Categoria_principal'] }}</option>
+              {% endfor %}
             </select>
 
+            <!-- Subcategoría -->
             <label class="etiqueta" for="subcategoria">Subcategoría:</label>
             <select id="subcategoria" name="Id_subcategoria" class="campo-input" required>
               <option value="">-- Selecciona una subcategoría --</option>
-              <!-- Opciones dinámicas o estáticas -->
+              {% for sub in subcategorias %}
+                <option value="{{ sub['Id_subcategoria'] }}" data-categoria="{{ sub['Id_categoria'] }}">{{ sub['Nombre'] }}</option>
+              {% endfor %}
             </select>
           </fieldset>
 
           <div class="grupo-botones">
             <button type="submit" class="boton">💾 Guardar gasto</button>
-          </div>
+            <a href="{{ url_for('tabla_gastos') }}">
+                        <button class="boton" type="button">Ver mis gastos</button>
+            </a>
+          </div>  
         </form>
       </div>
     </div>
-
-    <!-- Tabla de gastos -->
-    <div class="columna-derecha">
-
-      <div class="resumen-tabla">
-        <h2 class="titulo-login">📋 Lista de Gastos</h2>
-        <table id="tablaGastos" class="tabla-gastos">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Descripción</th>
-              <th>Categoría</th>
-              <th>Subcategoría</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
   </div>
-  <button class="boton-volver-fijo" onclick="window.location.href='principal.html'">
+  <button class="boton-volver-fijo" onclick="window.location.href='{{ url_for('principal') }}'">
     <span class="icono-flecha">⬅</span> Volver a la principal
   </button>
   <script>
-    document.getElementById('formGasto').addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      const fecha = document.getElementById('fecha').value;
-      const descripcion = document.getElementById('descripcion').value;
-      const valor = document.getElementById('valor').value;
-      const categoria = document.getElementById('categoria').value;
-      const subcategoria = document.getElementById('subcategoria').value;
-
-      if (!fecha || !descripcion || !valor || !categoria || !subcategoria) {
-        alert('Por favor completa todos los campos.');
-        return;
-      }
-
-      const tabla = document.getElementById('tablaGastos').querySelector('tbody');
-      const fila = tabla.insertRow();
-      fila.innerHTML = `
-        <td>${fecha}</td>
-        <td>${descripcion}</td>
-        <td>${categoria}</td>
-        <td>${subcategoria}</td>
-        <td>$${parseFloat(valor).toFixed(2)}</td>
-      `;
-
-      // Limpia el formulario
-      this.reset();
-    });
-
     function toggleMenu() {
       const menu = document.getElementById('menuOpciones');
       menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
     }
+document.getElementById('categoria').addEventListener('change', function() {
+  var categoriaId = this.value;
+  var subcatSelect = document.getElementById('subcategoria');
+  var options = subcatSelect.querySelectorAll('option[data-categoria]');
+  subcatSelect.value = "";
+  options.forEach(function(opt) {
+    opt.style.display = (opt.getAttribute('data-categoria') === categoriaId) ? 'block' : 'none';
+  });
+});
+window.addEventListener('DOMContentLoaded', function() {
+  // Oculta todas las subcategorías al inicio
+  var subcatSelect = document.getElementById('subcategoria');
+  var options = subcatSelect.querySelectorAll('option[data-categoria]');
+  options.forEach(function(opt) {
+    opt.style.display = 'none';
+  });
+});
   </script>
 </body>
 

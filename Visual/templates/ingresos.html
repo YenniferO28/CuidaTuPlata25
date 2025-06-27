@@ -107,11 +107,11 @@
         var ahorroDiv = document.getElementById('ahorro-div');
         if (ahorro === "Si") {
             ahorroDiv.style.display = "block";
-            document.getElementById('Ahorro').required = true;
+            document.getElementById('Cuanto_ahorrar').required = true;
         } else {
             ahorroDiv.style.display = "none";
-            document.getElementById('Ahorro').required = false;
-            document.getElementById('Ahorro').value = "";
+            document.getElementById('Cuanto_ahorrar').required = false;
+            document.getElementById('Cuanto_ahorrar').value = "";
         }
     }
     function mostrarInversion() {
@@ -147,19 +147,7 @@ limitarMaximo('Sueldo_2', 100000000);
 limitarMaximo('Ingresos_adicionales', 100000000);
 limitarMaximo('Cuanto_ahorrar', 30);
 limitarMaximo('Cuanto_invertir', 30);
-document.getElementById('Periodo').addEventListener('keydown', function(e) {
-    e.preventDefault();
-});
-['Tipo_persona', 'Frecuencia_pago', 'Ahorro', 'Inversion', 'Deudas'].forEach(function(id) {
-    var sel = document.getElementById(id);
-    if (sel) {
-        sel.addEventListener('keydown', function(e) {
-            // Bloquea cualquier intento de escribir en el select
-            e.preventDefault();
-        });
-    }
-});
-</script>
+    </script>
 </body>
 
 </html>

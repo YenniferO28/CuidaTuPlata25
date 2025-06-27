@@ -153,7 +153,7 @@
         <div class="caja-cifras">
             <p style="margin-bottom: 24px;">Aquí puedes ver un resumen de tus finanzas del mes actual.</p>
             <ul style="padding-left: 18px;">
-                <li><b>Ingresos totales:</b> ${{ ingresos_totales }}</li>
+                <li><b>Ingresos totales:</b> ${{ ultimo_ingreso }}</li>
                 <li><b>Total presupuesto del mes:</b> ${{ suma_presupuesto }}</li>
                 <li><b>Total gastos del mes:</b> ${{ suma_gastos }}</li>
                 <li><b>Total deudas activas:</b> ${{ suma_deudas }}</li>
@@ -179,15 +179,14 @@
         const ingresos = {{ ingresos_totales|default(0) }};
         const presupuesto = {{ suma_presupuesto|default(0) }};
         const gastos = {{ suma_gastos|default(0) }};
-        const deudas = {{ suma_deudas|default(0) }};
+        // Quitamos deudas del gráfico
 
-        const labels = ['Ingresos', 'Presupuesto', 'Gastos', 'Deudas'];
-        const data = [ingresos, presupuesto, gastos, deudas];
+        const labels = ['Ingresos', 'Presupuesto', 'Gastos'];
+        const data = [ingresos, presupuesto, gastos];
         const backgroundColors = [
             '#4caf50', // Ingresos
             '#217dbb', // Presupuesto
-            '#f4845f', // Gastos
-            '#b83b5e'  // Deudas
+            '#f4845f'  // Gastos
         ];
 
         document.addEventListener('DOMContentLoaded', function() {

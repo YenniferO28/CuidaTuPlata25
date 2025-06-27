@@ -132,22 +132,34 @@ def ingresos():
 def principal():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    nombre_usuario = session.get('Nombre', 'Usuario')  # <-- Cambia aquí
-    # Mostrar formulario de ingresos solo la primera vez
-    if not session.get('ingresos_registrados'):
-        conn = get_db()
-        c = conn.cursor()
-        c.execute('SELECT 1 FROM Ingresos WHERE Id_usuario=?', (session['user_id'],))
-        existe = c.fetchone()
-        conn.close()
-        if not existe:
-            return redirect(url_for('ingresos'))
-        else:
-            session['ingresos_registrados'] = True
-
-    # Calcula los totales:
     conn = get_db()
     c = conn.cursor()
+    # Obtener el último registro de ingresos del usuario
+    c.execute('''
+        SELECT Sueldo_1, Sueldo_2, Ingresos_adicionales
+        FROM Ingresos
+        WHERE Id_usuario=?
+        ORDER BY Id_ingreso DESC
+        LIMIT 1
+    ''', (session['user_id'],))
+    row = c.fetchone()
+    if row:
+        ultimo_ingreso = sum([row['Sueldo_1'] or 0, row['Sueldo_2'] or 0, row['Ingresos_adicionales'] or 0])
+    else:
+        ultimo_ingreso = 0
+
+    # Suma de gastos del mes actual
+    hoy = datetime.now()
+    mes_actual = hoy.strftime('%m')
+    anio_actual = hoy.strftime('%Y')
+    c.execute('''
+        SELECT SUM(Valor)
+        FROM Gastos
+        WHERE Id_usuario=? AND strftime('%m', Fecha)=? AND strftime('%Y', Fecha)=?
+    ''', (session['user_id'], mes_actual, anio_actual))
+    suma_gastos = c.fetchone()[0] or 0
+
+    # Calcula los totales:
     # Traer ingresos
     c.execute('SELECT Sueldo_1, Sueldo_2, Ingresos_adicionales FROM Ingresos WHERE Id_usuario=?', (session['user_id'],))
     ingresos_row = c.fetchone()
@@ -157,9 +169,6 @@ def principal():
         ingresos_totales = 0
 
     # Suma el presupuesto del mes
-    hoy = datetime.now()
-    mes_actual = hoy.strftime('%m')
-    anio_actual = hoy.strftime('%Y')
     c.execute('''
         SELECT SUM(Valor) as total
         FROM Presupuesto
@@ -167,15 +176,6 @@ def principal():
               strftime('%Y', Fecha_pago) = ? AND strftime('%m', Fecha_pago) = ?
     ''', (session['user_id'], anio_actual, mes_actual))
     suma_presupuesto = c.fetchone()['total'] or 0
-
-    # Suma los gastos del mes
-    c.execute('''
-        SELECT SUM(Valor) as total
-        FROM Gastos
-        WHERE Id_usuario=? AND Fecha IS NOT NULL AND
-              strftime('%Y', Fecha) = ? AND strftime('%m', Fecha) = ?
-    ''', (session['user_id'], anio_actual, mes_actual))
-    suma_gastos = c.fetchone()['total'] or 0
 
     # Suma las deudas activas
     c.execute('''
@@ -186,13 +186,14 @@ def principal():
     suma_deudas = c.fetchone()['total'] or 0
 
     conn.close()
+    nombre_usuario = session.get('Nombre', 'Usuario')  # <-- Cambia aquí
     return render_template(
         'principal.html',
-        nombre_usuario=nombre_usuario,
-        ingresos_totales=ingresos_totales,
+        ultimo_ingreso=ultimo_ingreso,
         suma_presupuesto=suma_presupuesto,
         suma_gastos=suma_gastos,
-        suma_deudas=suma_deudas
+        suma_deudas=suma_deudas,
+        nombre_usuario=nombre_usuario
     )
 
 @app.route('/gastos', methods=['GET', 'POST'])
@@ -418,11 +419,17 @@ def tabla_presupuesto():
     valor_inversion = 0
     porcentaje_ahorro = 0
     porcentaje_inversion = 0
-    if ingresos_totales > 0:
+    if ingresos_totales > 0 and len(data) > 1:
         porcentaje_ahorro = (float(data[0]) / ingresos_totales) * 100  # Suponiendo que el ahorro es el primer valor
         porcentaje_inversion = (float(data[1]) / ingresos_totales) * 100  # Suponiendo que la inversión es el segundo valor
         valor_ahorro = float(data[0])
         valor_inversion = float(data[1])
+    elif ingresos_totales > 0 and len(data) == 1:
+        porcentaje_ahorro = (float(data[0]) / ingresos_totales) * 100
+        valor_ahorro = float(data[0])
+        porcentaje_inversion = 0
+        valor_inversion = 0
+    # Si data está vacío, los valores quedan en 0
 
     ingreso_disponible = ingresos_totales - (valor_ahorro + valor_inversion)
 

@@ -40,6 +40,17 @@ def login():
         session['user_id'] = user['Id_usuario']
         session['Nombre'] = user['Nombre']
         session['Usuario'] = Usuario
+
+        # --- Lógica para primer ingreso ---
+        conn = get_db()
+        c = conn.cursor()
+        c.execute('SELECT 1 FROM Ingresos WHERE Id_usuario=?', (user['Id_usuario'],))
+        tiene_ingresos = c.fetchone()
+        conn.close()
+        if not tiene_ingresos:
+            # Si NO tiene ingresos registrados, va a la pantalla de ingresos
+            return redirect(url_for('ingresos'))
+        # Si ya tiene ingresos, va a la pantalla principal
         return redirect(url_for('principal'))
     return render_template('login.html')
 

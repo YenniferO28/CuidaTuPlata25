@@ -63,10 +63,10 @@
             <input type="date" id="fecha" name="Fecha" class="campo-input" required>
 
             <label class="etiqueta" for="descripcion">Descripción:</label>
-            <input type="text" id="descripcion" name="Descripcion" class="campo-input" required>
+            <input type="text" id="descripcion" name="Descripcion" class="campo-input" required minlength="3" maxlength="30" pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s.,-]+$" title="Solo letras, números y algunos símbolos. Mínimo 3 caracteres.">
 
             <label class="etiqueta" for="valor">Valor:</label>
-            <input type="number" id="valor" name="Valor" class="campo-input" required>
+            <input type="number" id="valor" name="Valor" class="campo-input" required min="1" max="100000000" step="any" title="Solo números positivos hasta 100.000.000.">
 
             <!-- Categoría -->
             <label class="etiqueta" for="categoria">Categoría:</label>
@@ -123,6 +123,22 @@ window.addEventListener('DOMContentLoaded', function() {
   });
 });
   </script>
+  <script>
+  // Evita escribir manualmente en el campo de fecha
+  document.addEventListener('DOMContentLoaded', function() {
+    var fechaInput = document.getElementById('fecha');
+    fechaInput.addEventListener('keydown', function(e) {
+      e.preventDefault();
+    });
+  });
+</script>
+<script>
+document.getElementById('valor').addEventListener('input', function(e) {
+  if (parseInt(this.value) > 100000000) {
+    this.value = 100000000;
+  }
+});
+</script>
 </body>
 
 </html>

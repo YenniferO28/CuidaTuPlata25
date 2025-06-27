@@ -21,9 +21,33 @@
                 {% endwith %}
                 <form method="POST" action="{{ url_for('login') }}">
                     <label for="usuario" class="etiqueta">Usuario:</label>
-                    <input type="text" id="usuario" name="Usuario" placeholder="Tu usuario" class="campo-input" required />
+                    <input 
+                        type="text" 
+                        id="usuario" 
+                        name="Usuario" 
+                        placeholder="Tu usuario" 
+                        class="campo-input" 
+                        required 
+                        minlength="4" 
+                        maxlength="8"
+                        pattern="^[A-Za-z0-9_]+$"
+                        title="Solo letras, números y guion bajo. Mínimo 4 caracteres."
+                    />
+
                     <label for="contrasena" class="etiqueta">Contraseña:</label>
-                    <input type="password" id="contrasena" name="Contrasena" placeholder="Tu contraseña" class="campo-input" required />
+                    <input 
+                        type="password" 
+                        id="contrasena" 
+                        name="Contrasena" 
+                        placeholder="Tu contraseña" 
+                        class="campo-input" 
+                        required 
+                        minlength="4" 
+                        maxlength="8"
+                        pattern=".{4,30}"
+                        title="Mínimo 4 caracteres."
+                    />
+
                     <button class="boton" type="submit">Entrar</button>
                 </form>
                 <p class="enlace-registro">

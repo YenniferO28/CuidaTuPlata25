@@ -15,22 +15,82 @@
             <h2 class="titulo-login">REGISTRO DE DEUDAS</h2>
             <form method="POST" action="{{ url_for('deudas') }}">
                 <label class="etiqueta" for="descripcion">Descripción:</label>
-                <input type="text" id="descripcion" name="descripcion" class="campo-input" required />
+                <input 
+                    type="text" 
+                    id="descripcion" 
+                    name="descripcion" 
+                    class="campo-input" 
+                    required 
+                    minlength="5" 
+                    maxlength="30"
+                    pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s.,-]+$"
+                    title="Solo letras, números y algunos símbolos. Mínimo 5 caracteres."
+                />
 
                 <label class="etiqueta" for="entidad">Entidad:</label>
-                <input type="text" id="entidad" name="Entidad" class="campo-input" required />
+                <input 
+                    type="text" 
+                    id="entidad" 
+                    name="Entidad" 
+                    class="campo-input" 
+                    required 
+                    minlength="5" 
+                    maxlength="30"
+                    pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s.,-]+$"
+                    title="Solo letras, números y algunos símbolos. Mínimo 5 caracteres."
+                />
 
                 <label class="etiqueta" for="valor">Valor actual:</label>
-                <input type="number" id="valor" name="Valor_actual" class="campo-input" required min="1" step="0.01" />
+                <input 
+                    type="number" 
+                    id="valor" 
+                    name="Valor_actual" 
+                    class="campo-input" 
+                    required 
+                    min="1" 
+                    max="100000000"
+                    step="0.01"
+                    title="Solo números positivos hasta 100.000.000."
+                />
 
                 <label class="etiqueta" for="valor_cuota">Valor de la cuota:</label>
-                <input type="number" id="valor_cuota" name="Valor_cuota" class="campo-input" required min="1" step="0.01" />
+                <input 
+                    type="number" 
+                    id="valor_cuota" 
+                    name="Valor_cuota" 
+                    class="campo-input" 
+                    required 
+                    min="1" 
+                    max="100000000"
+                    step="0.01"
+                    title="Solo números positivos hasta 100.000.000."
+                />
 
                 <label class="etiqueta" for="cuotas">Cuotas pendientes:</label>
-                <input type="number" id="cuotas" name="Cuotas_pendientes" class="campo-input" required min="1" />
+                <input 
+                    type="number" 
+                    id="cuotas" 
+                    name="Cuotas_pendientes" 
+                    class="campo-input" 
+                    required 
+                    min="1" 
+                    max="72"
+                    step="1"
+                    title="Solo números enteros positivos hasta 72."
+                />
 
-                <label class="etiqueta" for="interes">Interés (%):</label>
-                <input type="number" id="interes" name="Interes" class="campo-input" required min="0" step="0.01" />
+                <label class="etiqueta" for="interes">Interés mensual(%):</label>
+                <input 
+                    type="number" 
+                    id="interes" 
+                    name="Interes" 
+                    class="campo-input" 
+                    required 
+                    min="0" 
+                    max="5"
+                    step="0.01"
+                    title="Porcentaje entre 0 y 5."
+                />
 
                 <label class="etiqueta" for="Id_categoria">Categoría:</label>
                 <select id="Id_categoria" name="Id_categoria" class="campo-input" required>
@@ -93,6 +153,24 @@
         options.forEach(function(opt) {
             opt.style.display = 'none';
         });
+    });
+    document.getElementById('valor').addEventListener('input', function() {
+        if (parseFloat(this.value) > 100000000) {
+            this.value = 100000000;
+        }
+    });
+    document.getElementById('cuotas').addEventListener('input', function() {
+        if (parseInt(this.value) > 72) {
+            this.value = 72;
+        }
+    });
+    document.getElementById('interes').addEventListener('input', function() {
+        if (parseFloat(this.value) > 100) {
+            this.value = 100;
+        }
+        if (parseFloat(this.value) < 0) {
+            this.value = 0;
+        }
     });
     </script>
 </body>

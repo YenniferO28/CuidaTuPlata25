@@ -25,13 +25,53 @@
                   {% endif %}
                 {% endwith %}
                 <form method="POST" action="{{ url_for('registro') }}">
-                    <input type="text" name="nombre" placeholder="Tu nombre" class="campo-input" required />
+                    <input 
+                        type="text" 
+                        name="nombre" 
+                        placeholder="Tu nombre" 
+                        class="campo-input" 
+                        required 
+                        minlength="3" 
+                        maxlength="30"
+                        pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$"
+                        title="Solo letras y espacios. Mínimo 3 caracteres."
+                    />
 
-                    <input type="text" name="usuario" placeholder="Crea un usuario" class="campo-input" required />
+                    <input 
+                        type="text" 
+                        name="usuario" 
+                        placeholder="Crea un usuario" 
+                        class="campo-input" 
+                        required 
+                        minlength="4" 
+                        maxlength="8"
+                        pattern="^[A-Za-z0-9_]+$"
+                        title="Solo letras, números y guion bajo. Mínimo 4 caracteres."
+                    />
 
-                    <input type="password" name="contrasena" placeholder="Crea una contraseña" class="campo-input" required />
+                    <input 
+                        type="password" 
+                        name="contrasena" 
+                        placeholder="Crea una contraseña" 
+                        class="campo-input" 
+                        required 
+                        minlength="4" 
+                        maxlength="8"
+                        pattern=".{4,30}"
+                        title="Mínimo 4 caracteres."
+                    />
 
-                    <input type="text" name="palabra_clave" placeholder="Ej: apellido materno" class="campo-input" required />
+                    <input 
+                        type="text" 
+                        name="palabra_clave" 
+                        placeholder="Ej: apellido materno" 
+                        class="campo-input" 
+                        required 
+                        minlength="3" 
+                        maxlength="20"
+                        pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$"
+                        title="Solo letras y espacios. Mínimo 3 caracteres."
+                    />
 
                     <button class="boton" type="submit">Registrarme</button>
                 </form>

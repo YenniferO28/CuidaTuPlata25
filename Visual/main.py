@@ -94,8 +94,8 @@ def ingresos():
         Ingresos_adicionales = request.form.get('Ingresos_adicionales')
         Periodo = request.form.get('Periodo')
         Frecuencia_pago = request.form.get('Frecuencia_pago')
-        Ahorro = request.form.get('Ahorro')
-        Inversion = request.form.get('Inversion')
+        Ahorro = request.form.get('Ahorro', 0)  # Este será el valor numérico
+        Inversion = request.form.get('Inversion', 0)  # Este será el valor numérico
         Deudas = request.form.get('Deudas')
         Id_usuario = session.get('user_id')
 
@@ -110,6 +110,18 @@ def ingresos():
         # Guarda los ingresos en la base de datos
         conn = get_db()
         c = conn.cursor()
+
+        # Asegúrate de convertirlos a float antes de guardar
+        try:
+            ahorro = float(Ahorro)
+        except (TypeError, ValueError):
+            ahorro = 0.0
+
+        try:
+            inversion = float(Inversion)
+        except (TypeError, ValueError):
+            inversion = 0.0
+
         c.execute('''INSERT INTO Ingresos 
             (Id_usuario, Sueldo_1, Sueldo_2, Ingresos_adicionales, Periodo, Tipo_persona, Ahorro, Inversion, Frecuencia_pago, Deudas)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
@@ -134,24 +146,18 @@ def principal():
         return redirect(url_for('login'))
     conn = get_db()
     c = conn.cursor()
-    # Obtener el último registro de ingresos del usuario
-    c.execute('''
-        SELECT Sueldo_1, Sueldo_2, Ingresos_adicionales
-        FROM Ingresos
-        WHERE Id_usuario=?
-        ORDER BY Id_ingreso DESC
-        LIMIT 1
-    ''', (session['user_id'],))
-    row = c.fetchone()
-    if row:
-        ultimo_ingreso = sum([row['Sueldo_1'] or 0, row['Sueldo_2'] or 0, row['Ingresos_adicionales'] or 0])
-    else:
-        ultimo_ingreso = 0
-
-    # Suma de gastos del mes actual
     hoy = datetime.now()
     mes_actual = hoy.strftime('%m')
     anio_actual = hoy.strftime('%Y')
+    # Suma de ingresos del mes actual
+    c.execute('''
+        SELECT SUM(Sueldo_1 + Sueldo_2 + Ingresos_adicionales) as total
+        FROM Ingresos
+        WHERE Id_usuario=? AND strftime('%Y', Periodo)=? AND strftime('%m', Periodo)=?
+    ''', (session['user_id'], anio_actual, mes_actual))
+    ingresos_totales = c.fetchone()['total'] or 0
+
+    # Suma de gastos del mes actual
     c.execute('''
         SELECT SUM(Valor)
         FROM Gastos
@@ -184,15 +190,28 @@ def principal():
         WHERE Id_usuario=?
     ''', (session['user_id'],))
     suma_deudas = c.fetchone()['total'] or 0
-
+        # Obtener el último registro de ingresos
+    c.execute('''
+        SELECT Sueldo_1, Sueldo_2, Ingresos_adicionales
+        FROM Ingresos
+        WHERE Id_usuario=?
+        ORDER BY Id_ingreso DESC
+        LIMIT 1
+    ''', (session['user_id'],))
+    row = c.fetchone()
+    if row:
+        ultimo_ingreso = sum([row['Sueldo_1'] or 0, row['Sueldo_2'] or 0, row['Ingresos_adicionales'] or 0])
+    else:
+        ultimo_ingreso = 0
     conn.close()
     nombre_usuario = session.get('Nombre', 'Usuario')  # <-- Cambia aquí
     return render_template(
         'principal.html',
-        ultimo_ingreso=ultimo_ingreso,
+        ingresos_totales=ingresos_totales,
         suma_presupuesto=suma_presupuesto,
         suma_gastos=suma_gastos,
         suma_deudas=suma_deudas,
+        ultimo_ingreso=ultimo_ingreso,
         nombre_usuario=nombre_usuario
     )
 
@@ -309,11 +328,20 @@ def ver_deudas():
         LEFT JOIN Subcategoria s ON d.Id_subcategoria = s.Id_subcategoria
         WHERE d.Id_usuario=?
     ''', (session['user_id'],))
-    deudas = [dict(deuda) for deuda in c.fetchall()]
-    # Prepara los arrays para el gráfico
-    labels = [f"{d['Descripcion']} - {d['Subcategoria']}" for d in deudas]
-    data = [d['Valor_actual'] for d in deudas]
-    subcategorias = [d['Subcategoria'] for d in deudas]
+    deudas_rows = c.fetchall()
+    deudas = [dict(d) for d in deudas_rows]
+
+    # Agrupar por subcategoría
+    from collections import defaultdict
+    subcat_suma = defaultdict(float)
+    for d in deudas:
+        subcat = d['Subcategoria'] or 'Sin subcategoría'
+        subcat_suma[subcat] += d['Valor_actual']
+
+    labels = list(subcat_suma.keys())
+    data = list(subcat_suma.values())
+    subcategorias = labels  # Para compatibilidad con el template
+
     conn.close()
     return render_template(
         'ver_deudas.html',
@@ -343,6 +371,7 @@ def tabla_gastos():
         return redirect(url_for('login'))
     conn = get_db()
     c = conn.cursor()
+    # Traer todos los gastos para la tabla
     c.execute('''
         SELECT 
             g.Fecha, 
@@ -356,20 +385,27 @@ def tabla_gastos():
         WHERE g.Id_usuario=?
     ''', (session['user_id'],))
     gastos_rows = c.fetchall()
-    # Convierte cada Row a dict
     gastos = [dict(g) for g in gastos_rows]
-    labels = [f"{g['Descripcion']} - {g['Subcategoria']}" for g in gastos]
-    data = [g['Valor'] for g in gastos]
-    subcategorias = [g['Subcategoria'] for g in gastos]
-    fechas = [g['Fecha'] for g in gastos]
+
+    # Agrupar por categoría
+    from collections import defaultdict
+    categoria_suma = defaultdict(float)
+    for g in gastos:
+        categoria = g['Categoria'] or 'Sin categoría'
+        categoria_suma[categoria] += g['Valor']
+
+    labels = list(categoria_suma.keys())
+    data = list(categoria_suma.values())
+
+    subcategorias = labels  # Para mantener compatibilidad con el template
+
     conn.close()
     return render_template(
         'tabla_gastos.html',
         gastos=gastos,
         labels=labels,
         data=data,
-        subcategorias=subcategorias,
-        fechas=fechas
+        subcategorias=subcategorias
     )
 
 @app.route('/tabla_presupuesto')
@@ -378,100 +414,91 @@ def tabla_presupuesto():
         return redirect(url_for('login'))
     conn = get_db()
     c = conn.cursor()
-    # Traer presupuestos del usuario
+    # Obtener el último registro de ingresos
     c.execute('''
-        SELECT p.Descripcion, p.Fecha_pago, c.Categoria_principal AS Categoria, s.Nombre AS Subcategoria, 
-               p.Tipo_gasto, p.Valor
-        FROM Presupuesto p
-        LEFT JOIN Categoria c ON p.Id_categoria = c.Id_categoria
-        LEFT JOIN Subcategoria s ON p.Id_subcategoria = s.Id_subcategoria
-        WHERE p.Id_usuario=?
+        SELECT Sueldo_1, Sueldo_2, Ingresos_adicionales
+        FROM Ingresos
+        WHERE Id_usuario=?
+        ORDER BY Id_ingreso DESC
+        LIMIT 1
     ''', (session['user_id'],))
-    presupuesto = [dict(row) for row in c.fetchall()]
+    row = c.fetchone()
+    if row:
+        ultimo_ingreso = sum([row['Sueldo_1'] or 0, row['Sueldo_2'] or 0, row['Ingresos_adicionales'] or 0])
+    else:
+        ultimo_ingreso = 0
 
-    # Filtrar por mes y año actual
+    # Suma el presupuesto del mes
     hoy = datetime.now()
     mes_actual = hoy.strftime('%m')
     anio_actual = hoy.strftime('%Y')
-    presupuesto_mes = [
-        item for item in presupuesto
-        if item['Fecha_pago'] and
-           str(item['Fecha_pago'])[0:4] == anio_actual and
-           str(item['Fecha_pago'])[5:7] == mes_actual
-    ]
+    c.execute('''
+        SELECT SUM(Valor) as total
+        FROM Presupuesto
+        WHERE Id_usuario=? AND Fecha_pago IS NOT NULL AND
+              strftime('%Y', Fecha_pago) = ? AND strftime('%m', Fecha_pago) = ?
+    ''', (session['user_id'], anio_actual, mes_actual))
+    suma_presupuesto = c.fetchone()['total'] or 0
 
-    labels = [f"{item['Descripcion']} - {item['Subcategoria']}" for item in presupuesto_mes]
-    data = [item['Valor'] for item in presupuesto_mes]
-    subcategorias = [item['Subcategoria'] for item in presupuesto_mes]
+    # Suma las deudas activas
+    c.execute('''
+        SELECT SUM(Valor_actual) as total
+        FROM Deudas
+        WHERE Id_usuario=?
+    ''', (session['user_id'],))
+    suma_deudas = c.fetchone()['total'] or 0
+        # Agrupar el presupuesto del mes por categoría para el gráfico de torta
+    c.execute('''
+        SELECT c.Categoria_principal AS Categoria, SUM(p.Valor) as total
+        FROM Presupuesto p
+        LEFT JOIN Categoria c ON p.Id_categoria = c.Id_categoria
+        WHERE p.Id_usuario=? AND p.Fecha_pago IS NOT NULL AND
+              strftime('%Y', p.Fecha_pago) = ? AND strftime('%m', p.Fecha_pago) = ?
+        GROUP BY c.Categoria_principal
+    ''', (session['user_id'], anio_actual, mes_actual))
+    rows = c.fetchall()
+    labels = [row['Categoria'] or 'Sin categoría' for row in rows]
+    data = [row['total'] for row in rows]
+    subcategorias = labels  # Para compatibilidad con el template
 
-    # Traer ingresos
-    c.execute('SELECT Sueldo_1, Sueldo_2, Ingresos_adicionales FROM Ingresos WHERE Id_usuario=?', (session['user_id'],))
-    ingresos_row = c.fetchone()
-    if ingresos_row:
-        ingresos_totales = sum(float(ingresos_row[k] or 0) for k in ['Sueldo_1', 'Sueldo_2', 'Ingresos_adicionales'])
-    else:
-        ingresos_totales = 0
-    suma_presupuesto = sum(data)
-    saldo_disponible = ingresos_totales - suma_presupuesto
-
-    # Calcular porcentajes de ahorro e inversión
-    valor_ahorro = 0
-    valor_inversion = 0
+    # Calcular porcentajes y valores de ahorro e inversión
+    c.execute('SELECT Ahorro, Inversion FROM Ingresos WHERE Id_usuario=?', (session['user_id'],))
+    ahorro_inversion = c.fetchone()
+    valor_ahorro = float(ahorro_inversion['Ahorro'] or 0)
+    valor_inversion = float(ahorro_inversion['Inversion'] or 0)
+    ingreso_disponible = 0
     porcentaje_ahorro = 0
     porcentaje_inversion = 0
-    if ingresos_totales > 0 and len(data) > 1:
-        porcentaje_ahorro = (float(data[0]) / ingresos_totales) * 100  # Suponiendo que el ahorro es el primer valor
-        porcentaje_inversion = (float(data[1]) / ingresos_totales) * 100  # Suponiendo que la inversión es el segundo valor
-        valor_ahorro = float(data[0])
-        valor_inversion = float(data[1])
-    elif ingresos_totales > 0 and len(data) == 1:
-        porcentaje_ahorro = (float(data[0]) / ingresos_totales) * 100
-        valor_ahorro = float(data[0])
-        porcentaje_inversion = 0
-        valor_inversion = 0
-    # Si data está vacío, los valores quedan en 0
 
-    ingreso_disponible = ingresos_totales - (valor_ahorro + valor_inversion)
-
-    # Suponiendo que tienes el id del usuario en session['user_id']
-    c.execute("""
-        SELECT Ahorro, Inversion
-        FROM Ingresos
-        WHERE Id_usuario = ?
-        ORDER BY Periodo DESC, Id_ingreso DESC
-        LIMIT 1
-    """, (session['user_id'],))
-    Ahorro = porcentaje_ahorro
-    Inversion = porcentaje_inversion
-    row = c.fetchone()
-    if row:
-        porcentaje_ahorro = row[0] or 0
-        porcentaje_inversion = row[1] or 0
+    # Calcula los valores si tienes datos
+    if suma_presupuesto > 0 and ultimo_ingreso > 0:
+        for i, categoria in enumerate(labels):
+            if categoria.lower() == "ahorro":
+                valor_ahorro = float(data[i])
+            elif categoria.lower() == "inversión":
+                valor_inversion = float(data[i])
+        ingreso_disponible = float(ultimo_ingreso) - float(suma_presupuesto)
+        porcentaje_ahorro = (valor_ahorro / float(ultimo_ingreso)) * 100 if float(ultimo_ingreso) else 0
+        porcentaje_inversion = (valor_inversion / float(ultimo_ingreso)) * 100 if float(ultimo_ingreso) else 0
     else:
-        porcentaje_ahorro = 0
-        porcentaje_inversion = 0
+        ingreso_disponible = float(ultimo_ingreso) - float(suma_presupuesto)
 
     conn.close()
-    # Añade el saldo como una categoría más para el gráfico
-    labels_grafico = labels + ['Saldo disponible']
-    data_grafico = data + [saldo_disponible]
-    subcategorias_grafico = subcategorias + ['Saldo disponible']
+    nombre_usuario = session.get('Nombre', 'Usuario')  # <-- Cambia aquí
     return render_template(
         'tabla_presupuesto.html',
-        presupuesto=presupuesto_mes,
-        labels=labels_grafico,
-        data=data_grafico,
-        subcategorias=subcategorias_grafico,
-        ingresos_totales=ingresos_totales,
-        suma_presupuesto=suma_presupuesto,  # <-- AGREGA ESTA LÍNEA
+        ultimo_ingreso=ultimo_ingreso,
+        suma_presupuesto=suma_presupuesto,
+        suma_deudas=suma_deudas,
+        nombre_usuario=nombre_usuario,
+        labels=labels,
+        data=data,
+        subcategorias=subcategorias,
         porcentaje_ahorro=porcentaje_ahorro,
         porcentaje_inversion=porcentaje_inversion,
         valor_ahorro=valor_ahorro,
         valor_inversion=valor_inversion,
         ingreso_disponible=ingreso_disponible,
-        saldo_disponible=saldo_disponible,
-        mes_actual=mes_actual,
-        anio_actual=anio_actual
     )
 
 # Puedes agregar aquí más rutas según lo necesites

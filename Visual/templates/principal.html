@@ -161,7 +161,7 @@
         </div>
         <!-- Gráfico de barras a la derecha -->
         <div class="grafico-box grafico-ancho">
-            <h3 style="color:#217dbb; margin-bottom: 18px;">Comparativo: Ingresos, Presupuesto, Gastos y Deudas
+            <h3 style="color:#217dbb; margin-bottom: 18px;">Comparativo: Ingresos, Presupuesto y Gastos
             </h3>
             <canvas id="graficoComparativo"></canvas>
         </div>
@@ -177,8 +177,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         const ingresos = {{ ingresos_totales|default(0) }};
-        const presupuesto = {{ suma_presupuesto|default(0) }};
-        const gastos = {{ suma_gastos|default(0) }};
+const presupuesto = {{ suma_presupuesto|default(0) }};
+const gastos = {{ suma_gastos|default(0) }};
         // Quitamos deudas del gráfico
 
         const labels = ['Ingresos', 'Presupuesto', 'Gastos'];

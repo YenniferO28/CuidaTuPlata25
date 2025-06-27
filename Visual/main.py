@@ -412,6 +412,36 @@ def tabla_presupuesto():
         ingresos_totales = 0
     suma_presupuesto = sum(data)
     saldo_disponible = ingresos_totales - suma_presupuesto
+
+    # Calcular porcentajes de ahorro e inversión
+    valor_ahorro = 0
+    valor_inversion = 0
+    porcentaje_ahorro = 0
+    porcentaje_inversion = 0
+    if ingresos_totales > 0:
+        porcentaje_ahorro = (float(data[0]) / ingresos_totales) * 100  # Suponiendo que el ahorro es el primer valor
+        porcentaje_inversion = (float(data[1]) / ingresos_totales) * 100  # Suponiendo que la inversión es el segundo valor
+        valor_ahorro = float(data[0])
+        valor_inversion = float(data[1])
+
+    ingreso_disponible = ingresos_totales - (valor_ahorro + valor_inversion)
+
+    # Suponiendo que tienes el id del usuario en session['user_id']
+    c.execute("""
+        SELECT porcentaje_ahorro, porcentaje_inversion
+        FROM Ingresos
+        WHERE Id_usuario = ?
+        ORDER BY Fecha DESC, Id_ingreso DESC
+        LIMIT 1
+    """, (session['user_id'],))
+    row = c.fetchone()
+    if row:
+        porcentaje_ahorro = row[0] or 0
+        porcentaje_inversion = row[1] or 0
+    else:
+        porcentaje_ahorro = 0
+        porcentaje_inversion = 0
+
     conn.close()
     # Añade el saldo como una categoría más para el gráfico
     labels_grafico = labels + ['Saldo disponible']
@@ -424,7 +454,12 @@ def tabla_presupuesto():
         data=data_grafico,
         subcategorias=subcategorias_grafico,
         ingresos_totales=ingresos_totales,
-        suma_presupuesto=suma_presupuesto,
+        suma_presupuesto=suma_presupuesto,  # <-- AGREGA ESTA LÍNEA
+        porcentaje_ahorro=porcentaje_ahorro,
+        porcentaje_inversion=porcentaje_inversion,
+        valor_ahorro=valor_ahorro,
+        valor_inversion=valor_inversion,
+        ingreso_disponible=ingreso_disponible,
         saldo_disponible=saldo_disponible,
         mes_actual=mes_actual,
         anio_actual=anio_actual

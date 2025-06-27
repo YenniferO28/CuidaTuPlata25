@@ -137,6 +137,11 @@
                     <p><b>Ingresos totales:</b> ${{ ingresos_totales }}</p>
                     <p><b>Total presupuesto del mes:</b> ${{ suma_presupuesto }}</p>
                     <p><b>Saldo disponible:</b> ${{ saldo_disponible }}</p>
+                    <p>
+                      <b>% ahorro:</b> {{ porcentaje_ahorro|int }}% (${{ "{:,.2f}".format(valor_ahorro) }}) &nbsp; | &nbsp;
+                      <b>% inversión:</b> {{ porcentaje_inversion|int }}% (${{ "{:,.2f}".format(valor_inversion) }})
+                    </p>
+                    <p><b>Ingreso disponible:</b> ${{ "{:,.2f}".format(ingreso_disponible) }}</p>
                 </div>
             </div>
         </div>
@@ -225,6 +230,33 @@
                 document.getElementById('graficoPresupuesto').parentNode.innerHTML +=
                     "<p style='color:#888; text-align:center;'>No hay datos para mostrar el gráfico.</p>";
             }
+
+            // Gráfica de barras para ahorro, inversión y disponible
+            const ctxBar = document.getElementById('graficoBarras').getContext('2d');
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Ahorro', 'Inversión', 'Disponible'],
+                    datasets: [{
+                        label: 'Distribución de ingresos',
+                        data: [
+                            {{ valor_ahorro }},
+                            {{ valor_inversion }},
+                            {{ ingreso_disponible }}
+                        ],
+                        backgroundColor: ['#4caf50', '#f4845f', '#217dbb']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
         });
         console.log(labels, data, subcategorias);
     </script>

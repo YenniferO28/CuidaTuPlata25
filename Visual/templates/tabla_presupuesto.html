@@ -45,7 +45,7 @@
             padding: 20px;
             min-width: 320px;
             min-height: 320px;
-            max-width: 360px;
+            max-width: 370px;
         }
 
         .boton-agregar {
@@ -127,23 +127,24 @@
         </div>
         <div>
             <div class="grafico-box">
-                <h3 style="color:#217dbb; margin-bottom: 18px;">
+                <h3 style="color:#217dbb; margin-bottom: 20px;">
                     📊 Proporción de mi presupuesto del mes
                 </h3>
-                <canvas id="graficoPresupuesto" width="320" height="320"></canvas>
-                <!-- Información debajo del gráfico -->
-                <div style="margin-top: 24px;">
-                    <p><b>Mes actual:</b> {{ mes_actual }}/{{ anio_actual }}</p>
-                    <p><b>Ingresos totales:</b> ${{ ingresos_totales }}</p>
-                    <p><b>Total presupuesto del mes:</b> ${{ suma_presupuesto }}</p>
-                    <p><b>Saldo disponible:</b> ${{ saldo_disponible }}</p>
-                    <p>
-                      <b>% ahorro:</b> {{ porcentaje_ahorro|int }}% (${{ "{:,.2f}".format(valor_ahorro) }}) &nbsp; | &nbsp;
-                      <b>% inversión:</b> {{ porcentaje_inversion|int }}% (${{ "{:,.2f}".format(valor_inversion) }})
-                    </p>
-                    <p><b>Ingreso disponible:</b> ${{ "{:,.2f}".format(ingreso_disponible) }}</p>
+                <div style=" align-items: flex-start; gap: 30px;">
+                    <canvas id="graficoPresupuesto" width="320" height="320"></canvas>
+                    <div>
+                        <p><b>Mes actual:</b> {{ mes_actual }}/{{ anio_actual }}</p>
+                        <p><b>Ingresos totales:</b> ${{ ingresos_totales }}</p>
+                        <p><b>Total presupuesto del mes:</b> ${{ suma_presupuesto }}</p>
+                        <p><b>Saldo disponible:</b> ${{ saldo_disponible }}</p>
+                        <p>
+                            <b>% ahorro:</b> {{ porcentaje_ahorro|int }}% (${{ "{:,.2f}".format(valor_ahorro) }}) &nbsp; | &nbsp;
+                            <b>% inversión:</b> {{ porcentaje_inversion|int }}% (${{ "{:,.2f}".format(valor_inversion) }})
+                        </p>
+                        <p><b>Ingreso disponible:</b> ${{ "{:,.2f}".format(ingreso_disponible) }}</p>
+                    </div>
                 </div>
-            </div>
+            </div>    
         </div>
     </div>
 

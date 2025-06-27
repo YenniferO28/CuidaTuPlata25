@@ -428,12 +428,14 @@ def tabla_presupuesto():
 
     # Suponiendo que tienes el id del usuario en session['user_id']
     c.execute("""
-        SELECT porcentaje_ahorro, porcentaje_inversion
+        SELECT Ahorro, Inversion
         FROM Ingresos
         WHERE Id_usuario = ?
-        ORDER BY Fecha DESC, Id_ingreso DESC
+        ORDER BY Periodo DESC, Id_ingreso DESC
         LIMIT 1
     """, (session['user_id'],))
+    Ahorro = porcentaje_ahorro
+    Inversion = porcentaje_inversion
     row = c.fetchone()
     if row:
         porcentaje_ahorro = row[0] or 0

@@ -90,40 +90,39 @@ def registro():
 def ingresos():
     if request.method == 'POST':
         Tipo_persona = request.form.get('Tipo_persona')
-        Sueldo_1 = request.form.get('Sueldo_1')
-        Sueldo_2 = request.form.get('Sueldo_2')
-        Ingresos_adicionales = request.form.get('Ingresos_adicionales')
+        Sueldo_1 = request.form.get('Sueldo_1', 0)
+        Sueldo_2 = request.form.get('Sueldo_2', 0)
+        Ingresos_adicionales = request.form.get('Ingresos_adicionales', 0)
         Periodo = request.form.get('Periodo')
         Frecuencia_pago = request.form.get('Frecuencia_pago')
-        Ahorro = request.form.get('Ahorro', 0)
-        Inversion = request.form.get('Inversion', 0)
         Deudas = request.form.get('Deudas')
         Id_usuario = session.get('user_id')
 
-        if Tipo_persona not in ['P', 'F']:
-            flash('Debes seleccionar un tipo de persona válido.')
-            return render_template('ingresos.html', nombre_usuario=session.get('Nombre', 'Usuario'))
-        if Deudas not in ['S', 'N']:
-            flash('Debes seleccionar una opción válida para deudas.')
-            return render_template('ingresos.html', nombre_usuario=session.get('Nombre', 'Usuario'))
+        # Solo tomamos el valor numérico si el usuario seleccionó "Si"
+        Ahorro = request.form.get('Ahorro', 'No')
+        Cuanto_ahorrar = request.form.get('Cuanto_ahorrar', '0')
+        Inversion = request.form.get('Inversion', 'No')
+        Cuanto_invertir = request.form.get('Cuanto_invertir', '0')
 
         try:
-            ahorro = float(Ahorro)
+            ahorro = float(Cuanto_ahorrar) if Ahorro == "Si" and Cuanto_ahorrar.strip() != "" else 0.0
         except (TypeError, ValueError):
             ahorro = 0.0
+
         try:
-            inversion = float(Inversion)
+            inversion = float(Cuanto_invertir) if Inversion == "Si" and Cuanto_invertir.strip() != "" else 0.0
         except (TypeError, ValueError):
             inversion = 0.0
 
         with get_db() as conn:
             c = conn.cursor()
             c.execute('''INSERT INTO Ingresos 
-                (Id_usuario, Sueldo_1, Sueldo_2, Ingresos_adicionales, Periodo, Tipo_persona, Ahorro, Inversion, Frecuencia_pago, Deudas)
+                (Id_usuario, Tipo_persona, Sueldo_1, Sueldo_2, Ingresos_adicionales, Periodo, Frecuencia_pago, Ahorro, Inversion, Deudas)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (Id_usuario, Sueldo_1, Sueldo_2, Ingresos_adicionales, Periodo, Tipo_persona, ahorro, inversion, Frecuencia_pago, Deudas))
+                (Id_usuario, Tipo_persona, Sueldo_1, Sueldo_2, Ingresos_adicionales, Periodo, Frecuencia_pago, ahorro, inversion, Deudas))
             conn.commit()
-
+            flash('Ingresos registrados correctamente')
+            return redirect(url_for('tabla_presupuesto'))
         if Deudas == "S":
             session['mostrar_formulario_deuda'] = True
             return redirect(url_for('deudas'))

@@ -253,119 +253,9 @@ def presupuesto():
                 (session['user_id'], Secuencial, Periodo, Descripcion, Fecha_pago, Id_categoria, Id_subcategoria, Tipo_gasto, Valor))
             conn.commit()
             flash('Presupuesto registrado correctamente')
-        # Consulta para la tabla
-        c.execute('''
-            SELECT p.Descripcion, p.Fecha_pago, c.Categoria_principal AS Categoria, s.Nombre AS Subcategoria, 
-                   p.Tipo_gasto, p.Valor
-            FROM Presupuesto p
-            LEFT JOIN Categoria c ON p.Id_categoria = c.Id_categoria
-            LEFT JOIN Subcategoria s ON p.Id_subcategoria = s.Id_subcategoria
-            WHERE p.Id_usuario=?
-        ''', (session['user_id'],))
-        presupuestos = c.fetchall()
-
-        # --- Cálculo de variables para el template ---
-        # Último ingreso
-        c.execute('''
-            SELECT Sueldo_1, Sueldo_2, Ingresos_adicionales
-            FROM Ingresos
-            WHERE Id_usuario=?
-            ORDER BY Id_ingreso DESC
-            LIMIT 1
-        ''', (session['user_id'],))
-        row = c.fetchone()
-        if row:
-            ultimo_ingreso = sum([row['Sueldo_1'] or 0, row['Sueldo_2'] or 0, row['Ingresos_adicionales'] or 0])
-        else:
-            ultimo_ingreso = 0
-
-        hoy = datetime.now()
-        mes_actual = hoy.strftime('%m')
-        anio_actual = hoy.strftime('%Y')
-
-        # Suma presupuesto
-        c.execute('''
-            SELECT SUM(Valor) as total
-            FROM Presupuesto
-            WHERE Id_usuario=? AND Fecha_pago IS NOT NULL AND
-                  strftime('%Y', Fecha_pago) = ? AND strftime('%m', Fecha_pago) = ?
-        ''', (session['user_id'], anio_actual, mes_actual))
-        suma_presupuesto = c.fetchone()['total'] or 0
-
-        # Suma deudas
-        c.execute('''
-            SELECT SUM(Valor_actual) as total
-            FROM Deudas
-            WHERE Id_usuario=?
-        ''', (session['user_id'],))
-        suma_deudas = c.fetchone()['total'] or 0
-
-        # Labels y data para gráfico
-        c.execute('''
-            SELECT c.Categoria_principal AS Categoria, SUM(p.Valor) as total
-            FROM Presupuesto p
-            LEFT JOIN Categoria c ON p.Id_categoria = c.Id_categoria
-            WHERE p.Id_usuario=? AND p.Fecha_pago IS NOT NULL AND
-                  strftime('%Y', p.Fecha_pago) = ? AND strftime('%m', p.Fecha_pago) = ?
-            GROUP BY c.Categoria_principal
-        ''', (session['user_id'], anio_actual, mes_actual))
-        rows = c.fetchall()
-        labels = [row['Categoria'] or 'Sin categoría' for row in rows]
-        data = [row['total'] for row in rows]
-        subcategorias_graf = labels
-
-        # Ahorro e inversión
-        c.execute('SELECT Ahorro, Inversion FROM Ingresos WHERE Id_usuario=?', (session['user_id'],))
-        ahorro_inversion = c.fetchone()
-        valor_ahorro = safe_float(ahorro_inversion['Ahorro'])
-        valor_inversion = safe_float(ahorro_inversion['Inversion'])
-        ingreso_disponible = 0
-        porcentaje_ahorro = 0
-        porcentaje_inversion = 0
-
-        if suma_presupuesto > 0 and ultimo_ingreso > 0:
-            for i, categoria in enumerate(labels):
-                if categoria.lower() == "ahorro":
-                    valor_ahorro = float(data[i])
-                elif categoria.lower() == "inversión":
-                    valor_inversion = float(data[i])
-            ingreso_disponible = float(ultimo_ingreso) - float(suma_presupuesto)
-            porcentaje_ahorro = (valor_ahorro / float(ultimo_ingreso)) * 100 if float(ultimo_ingreso) else 0
-            porcentaje_inversion = (valor_inversion / float(ultimo_ingreso)) * 100 if float(ultimo_ingreso) else 0
-        else:
-            ingreso_disponible = float(ultimo_ingreso) - float(suma_presupuesto)
-
-    # Obtener la lista de presupuestos para mostrar en la tabla
-    c.execute('''
-        SELECT p.Descripcion, p.Fecha_pago, c.Categoria_principal AS Categoria, s.Nombre AS Subcategoria, 
-               p.Tipo_gasto, p.Valor
-        FROM Presupuesto p
-        LEFT JOIN Categoria c ON p.Id_categoria = c.Id_categoria
-        LEFT JOIN Subcategoria s ON p.Id_subcategoria = s.Id_subcategoria
-        WHERE p.Id_usuario=?
-    ''', (session['user_id'],))
-    presupuestos = c.fetchall()
-
-    nombre_usuario = session.get('Nombre', 'Usuario')
-    return render_template(
-        'tabla_presupuesto.html',
-        presupuesto=presupuestos,
-        ultimo_ingreso=ultimo_ingreso,
-        suma_presupuesto=suma_presupuesto,
-        suma_deudas=suma_deudas,
-        nombre_usuario=nombre_usuario,
-        labels=labels,
-        data=data,
-        subcategorias=subcategorias,
-        porcentaje_ahorro=porcentaje_ahorro,
-        porcentaje_inversion=porcentaje_inversion,
-        valor_ahorro=valor_ahorro,
-        valor_inversion=valor_inversion,
-        ingreso_disponible=ingreso_disponible,
-        mes_actual=mes_actual,
-        anio_actual=anio_actual,
-        saldo_disponible=ingreso_disponible
-    )
+            return redirect(url_for('tabla_presupuesto'))  # Redirige al resumen después de guardar
+        # Si es GET, muestra el formulario:
+        return render_template('presupuesto.html', categorias=categorias, subcategorias=subcategorias)
 
 @app.route('/deudas', methods=['GET', 'POST'])
 def deudas():
@@ -525,7 +415,7 @@ def tabla_presupuesto():
         rows = c.fetchall()
         labels = [row['Categoria'] or 'Sin categoría' for row in rows]
         data = [row['total'] for row in rows]
-        subcategorias = labels
+        subcategorias = [str(l) for l in labels]  # <-- Asegura que sea lista de strings
 
         c.execute('SELECT Ahorro, Inversion FROM Ingresos WHERE Id_usuario=?', (session['user_id'],))
         ahorro_inversion = c.fetchone()
@@ -568,7 +458,7 @@ def tabla_presupuesto():
         nombre_usuario=nombre_usuario,
         labels=labels,
         data=data,
-        subcategorias=subcategorias,
+        subcategorias=subcategorias,  # <-- Ahora es lista de strings
         porcentaje_ahorro=porcentaje_ahorro,
         porcentaje_inversion=porcentaje_inversion,
         valor_ahorro=valor_ahorro,
